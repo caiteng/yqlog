@@ -1,13 +1,19 @@
 services:
   yqlog:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: yqlog
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "${APP_PORT:-8000}:8000"
     environment:
       FLASK_SECRET_KEY: ${FLASK_SECRET_KEY:-please-change-me}
+      ACCESS_PASSWORD: ${ACCESS_PASSWORD:-无敌可爱语沁}
+      SESSION_DAYS: ${SESSION_DAYS:-1}
       FLASK_DEBUG: "false"
+      DATABASE_PATH: /app/data/yqlog.db
+      UPLOAD_FOLDER: /app/uploads
     volumes:
-      - ./data:/app/data
-      - ./uploads:/app/uploads
+      - ${DATA_DIR:-/opt/yqlog/data}:/app/data
+      - ${UPLOADS_DIR:-/opt/yqlog/uploads}:/app/uploads
