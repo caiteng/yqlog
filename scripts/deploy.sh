@@ -37,7 +37,7 @@ if [ ! -f .env ]; then
 fi
 
 echo "[deploy] 开始构建并启动容器"
-if docker compose --env-file .env up -d --build; then
+if docker compose --env-file .env -f docker-compose.yml -f docker-compose.prod.yml up -d --build; then
   echo "[deploy] 部署成功: $(git rev-parse --short HEAD)"
   exit 0
 fi
@@ -45,7 +45,7 @@ fi
 if [ -n "$PREV_COMMIT" ]; then
   echo "[deploy] 部署失败，回滚到上一版本: ${PREV_COMMIT}"
   git reset --hard "$PREV_COMMIT"
-  docker compose --env-file .env up -d --build
+  docker compose --env-file .env -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 fi
 
 echo "[deploy] 已完成回滚"

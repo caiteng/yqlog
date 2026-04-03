@@ -78,7 +78,7 @@ fi
 
 echo "[init] 首次构建并启动"
 cd "$APP_DIR"
-docker compose --env-file .env up -d --build
+docker compose --env-file .env -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 
 echo "[init] 初始化完成"
 echo "[init] 后续自动部署将直接调用 $APP_DIR/scripts/deploy.sh"

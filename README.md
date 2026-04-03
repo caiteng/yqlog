@@ -15,7 +15,103 @@
 - 图表：Chart.js
 - 部署：Docker Compose + GitHub Actions(SSH)
 
-## 本地运行
+## Docker 运行方式（本地 + 服务器）
+
+本项目采用 **1 个基础 compose + 1 个生产覆盖 compose**：
+
+- `docker-compose.yml`：本地默认预览（不强制挂载宿主机目录）
+- `docker-compose.prod.yml`：服务器覆盖（追加数据卷与外部配置挂载）
+
+---
+
+### 模式 A：本地 Mac 快速预览
+
+一条命令即可启动：
+
+```bash
+docker compose up --build
+```
+
+访问地址：
+
+- <http://127.0.0.1:8000/>
+
+特点：
+
+- 不需要提前创建 `/opt/yqlog/*` 目录
+- 不强制挂载宿主机数据目录
+- 默认使用容器内 `/app/data`、`/app/uploads`
+- 适合快速预览页面与交互（容器重建后数据可能丢失）
+
+---
+
+### 模式 B：服务器正式部署
+
+推荐命令：
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+```
+
+`docker-compose.prod.yml` 默认会挂载：
+
+- `${DATA_DIR:-/opt/yqlog/data} -> /app/data`
+- `${UPLOADS_DIR:-/opt/yqlog/uploads} -> /app/uploads`
+- `${CONFIG_FILE:-/opt/yqlog/config.yml} -> /app/config.override.yml (ro)`
+
+这样可以保证：
+
+- SQLite 数据持久化在宿主机
+- 上传文件持久化在宿主机
+- 容器重建后数据不丢
+
+> 修改服务器配置文件后，需要重启容器使配置生效：
+>
+> ```bash
+> docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+> ```
+
+## 配置系统（覆盖优先级）
+
+配置优先级从高到低：
+
+1. **服务器外部配置文件**（默认 `/app/config.override.yml`，通常由宿主机 `/opt/yqlog/config.yml` 挂载进来）
+2. **项目默认配置文件**（`config.default.yml`）
+3. **代码默认值**（`config.py` 里的 `CODE_DEFAULTS`）
+
+即：
+
+- 如果服务器外部配置存在，优先使用它
+- 否则回退到项目默认配置
+- 若默认配置也缺失，最后使用代码兜底值
+
+### 可配置项（示例）
+
+- `SECRET_KEY`
+- `ACCESS_PASSWORD`
+- `SESSION_DAYS`
+- `DATABASE_PATH`
+- `UPLOAD_FOLDER`
+- `ALBUM_MAX_PHOTOS`
+- `MAX_IMAGE_SIZE_BYTES`
+- `MAX_CONTENT_LENGTH`
+- `ALLOWED_EXTENSIONS`
+
+### 服务器配置样例（`/opt/yqlog/config.yml`）
+
+```yaml
+SECRET_KEY: "replace-with-strong-random"
+ACCESS_PASSWORD: "请改成你的口令"
+SESSION_DAYS: 3
+DATABASE_PATH: /app/data/yqlog.db
+UPLOAD_FOLDER: /app/uploads
+ALBUM_MAX_PHOTOS: 300
+MAX_IMAGE_SIZE_BYTES: 15728640
+MAX_CONTENT_LENGTH: 62914560
+ALLOWED_EXTENSIONS: ["png", "jpg", "jpeg", "webp", "gif"]
+```
+
+## 本地 Python 直接运行（可选）
 
 ```bash
 python -m venv .venv
@@ -23,30 +119,6 @@ source .venv/bin/activate
 pip install -r requirements.txt
 python app.py
 ```
-
-启动后访问：
-
-- 首页看板：<http://127.0.0.1:8000/>
-- 解锁页面：<http://127.0.0.1:8000/unlock>
-- 快捷录入：<http://127.0.0.1:8000/quick>
-- 相册模块：<http://127.0.0.1:8000/album>
-
-## 配置说明
-
-可通过环境变量配置（推荐），默认值在 `config.py`：
-
-- `FLASK_SECRET_KEY`：Session 密钥
-- `ACCESS_PASSWORD`：录入口令（默认 `无敌可爱语沁`）
-- `SESSION_DAYS`：Session 有效天数（默认 1 天）
-- `DATABASE_PATH`：SQLite 路径
-- `UPLOAD_FOLDER`：上传目录
-
-- `MAX_IMAGE_SIZE_BYTES`：单张图片大小限制（默认 10MB）
-- `ALBUM_MAX_PHOTOS`：相册最大照片数（默认 200）
-- `MAX_CONTENT_LENGTH`：单次请求体积限制（默认 60MB）
-
-可复制 `.env.example` 到 `.env` 后按需修改。
-
 
 ## 可复用 API（为后续小程序预留）
 
@@ -56,31 +128,19 @@ python app.py
 - `POST /api/v1/records/milk`：新增喝奶记录
 - `POST /api/v1/records/poop`：新增拉臭臭记录
 - `GET /api/v1/album/photos`：相册列表 + 容量元信息
-- `POST /api/v1/album/photos`：上传照片（后端校验 200 张上限）
+- `POST /api/v1/album/photos`：上传照片（后端校验上限）
 - `DELETE /api/v1/album/photos/<photo_id>`：删除照片（删库 + 删物理文件）
-
-相册限制策略：
-
-- 相册最多 200 张（后端强校验）
-- 单张图片默认最大 10MB（可通过环境变量调整）
 
 ## 服务器目录约定（自动部署）
 
 - `/opt/yqlog/app`：代码目录
 - `/opt/yqlog/data`：SQLite 数据目录（持久化）
 - `/opt/yqlog/uploads`：上传文件目录（持久化）
+- `/opt/yqlog/config.yml`：服务器配置文件（推荐）
 
 ## 首次初始化（手工执行一次）
 
-> 在新服务器上执行，用于安装 Docker/Compose、建目录、拉代码、生成 `.env`。
-
 ```bash
-# 以 root 或 sudo 执行
-cd /opt/yqlog/app 2>/dev/null || true
-
-# 若目录还没有仓库，可临时先拉一份后执行
-# git clone https://github.com/caiteng/yqlog.git /opt/yqlog/app
-
 REPO_URL='https://github.com/caiteng/yqlog.git' \
 APP_DIR='/opt/yqlog/app' \
 DATA_DIR='/opt/yqlog/data' \
@@ -89,50 +149,31 @@ BRANCH='main' \
 bash /opt/yqlog/app/scripts/server-init.sh
 ```
 
-执行后请编辑 `/opt/yqlog/app/.env`，至少修改：
+执行后请编辑 `/opt/yqlog/app/.env`，确认目录变量与配置文件路径：
 
-- `FLASK_SECRET_KEY`
-- `ACCESS_PASSWORD`
+- `DATA_DIR`
+- `UPLOADS_DIR`
+- `CONFIG_FILE`
 
 ## 自动部署（merge/push main 自动触发）
 
 工作流：`.github/workflows/deploy.yml`
 
-触发条件：
-
-- push 到 `main`
-- 手工触发（workflow_dispatch）
-
-工作流会 SSH 到服务器并执行：
-
-```bash
-bash /opt/yqlog/app/scripts/deploy.sh
-```
-
 `deploy.sh` 会：
 
 1. `git fetch + reset --hard origin/main`
-2. `docker compose up -d --build`
+2. `docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build`
 3. 若失败，自动回滚到上一个 commit 并再次启动
-
-## GitHub Secrets
-
-在仓库 `Settings -> Secrets and variables -> Actions` 中添加：
-
-- `DEPLOY_HOST`：服务器公网 IP 或域名
-- `DEPLOY_PORT`：SSH 端口（如 `22`）
-- `DEPLOY_USER`：SSH 用户名（如 `root` 或 `ubuntu`）
-- `DEPLOY_SSH_KEY`：用于登录服务器的私钥内容（建议专用部署密钥）
-- `DEPLOY_APP_DIR`：部署目录（建议 `/opt/yqlog/app`）
 
 ## 项目结构（核心）
 
 - `app.py`：路由、数据库、看板统计、相册上传删除
-- `config.py`：轻量配置
+- `config.py`：配置加载（覆盖优先级）
+- `config.default.yml`：项目默认配置
+- `docker-compose.yml`：本地预览默认配置
+- `docker-compose.prod.yml`：服务器部署覆盖配置
 - `scripts/server-init.sh`：首服初始化脚本
 - `scripts/deploy.sh`：自动部署脚本
-- `docker-compose.yml`：容器与数据卷定义
-- `.github/workflows/deploy.yml`：GitHub Actions 自动部署
 
 ## 数据表
 
@@ -141,9 +182,3 @@ bash /opt/yqlog/app/scripts/deploy.sh
 - `milk_records`：喝奶记录（`record_time`, `milk_ml`）
 - `poop_records`：拉臭臭记录（`record_time`, `poop_status`）
 - `album_photos`：相册图片（`image_path`, `created_at`）
-
-并设置 SQLite 参数：
-
-- `PRAGMA journal_mode=WAL;`
-- `PRAGMA synchronous=NORMAL;`
-- `PRAGMA foreign_keys=ON;`

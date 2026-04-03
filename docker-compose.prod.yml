@@ -1,0 +1,8 @@
+services:
+  yqlog:
+    environment:
+      CONFIG_OVERRIDE_PATH: /app/config.override.yml
+    volumes:
+      - ${DATA_DIR:-/opt/yqlog/data}:/app/data
+      - ${UPLOADS_DIR:-/opt/yqlog/uploads}:/app/uploads
+      - ${CONFIG_FILE:-/opt/yqlog/config.yml}:/app/config.override.yml:ro
