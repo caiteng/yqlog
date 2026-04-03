@@ -1,0 +1,6 @@
+services:
+  yqlog:
+    volumes:
+      - /opt/yqlog/data:/app/data
+      - /opt/yqlog/uploads:/app/uploads
+      - /opt/yqlog/config.yml:/app/config.override.yml:ro

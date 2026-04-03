@@ -7,7 +7,3 @@ services:
     restart: unless-stopped
     ports:
       - "${APP_PORT:-8000}:8000"
-    volumes:
-      - ${DATA_DIR:-/opt/yqlog/data}:/app/data
-      - ${UPLOADS_DIR:-/opt/yqlog/uploads}:/app/uploads
-      - /opt/yqlog/config.yml:/app/config.override.yml:ro

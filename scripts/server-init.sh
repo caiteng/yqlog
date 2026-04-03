@@ -2,8 +2,8 @@
 set -euo pipefail
 
 APP_DIR="${APP_DIR:-/opt/yqlog/app}"
-DATA_DIR="${DATA_DIR:-/opt/yqlog/data}"
-UPLOADS_DIR="${UPLOADS_DIR:-/opt/yqlog/uploads}"
+DATA_DIR="/opt/yqlog/data"
+UPLOADS_DIR="/opt/yqlog/uploads"
 REPO_URL="${REPO_URL:-}"
 BRANCH="${BRANCH:-main}"
 
@@ -71,14 +71,12 @@ fi
 
 if [ ! -f "$APP_DIR/.env" ] && [ -f "$APP_DIR/.env.example" ]; then
   cp "$APP_DIR/.env.example" "$APP_DIR/.env"
-  sed -i "s#^DATA_DIR=.*#DATA_DIR=$DATA_DIR#" "$APP_DIR/.env"
-  sed -i "s#^UPLOADS_DIR=.*#UPLOADS_DIR=$UPLOADS_DIR#" "$APP_DIR/.env"
   echo "[init] 已生成 $APP_DIR/.env，请手动修改 FLASK_SECRET_KEY / ACCESS_PASSWORD"
 fi
 
 echo "[init] 首次构建并启动"
 cd "$APP_DIR"
-docker compose --env-file .env up -d --build
+docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env up -d --build
 
 echo "[init] 初始化完成"
 echo "[init] 后续自动部署将直接调用 $APP_DIR/scripts/deploy.sh"
