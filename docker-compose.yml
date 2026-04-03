@@ -1,0 +1,13 @@
+services:
+  yqlog:
+    build: .
+    container_name: yqlog
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      FLASK_SECRET_KEY: ${FLASK_SECRET_KEY:-please-change-me}
+      FLASK_DEBUG: "false"
+    volumes:
+      - ./data:/app/data
+      - ./uploads:/app/uploads
