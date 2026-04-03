@@ -1,0 +1,52 @@
+{% extends 'layout.html' %}
+{% block title %}首页 - 语沁成长记录{% endblock %}
+{% block content %}
+<section class="cards">
+  <div class="card"><p>总记录数</p><strong>{{ stats.total_records }}</strong></div>
+  <div class="card"><p>最近记录</p><strong>{{ stats.latest_date or '暂无' }}</strong></div>
+  <div class="card"><p>平均身高(cm)</p><strong>{{ stats.avg_height or '-' }}</strong></div>
+  <div class="card"><p>平均体重(kg)</p><strong>{{ stats.avg_weight or '-' }}</strong></div>
+  <div class="card"><p>平均头围(cm)</p><strong>{{ stats.avg_head or '-' }}</strong></div>
+</section>
+
+<section class="panel">
+  <h2>成长趋势大屏</h2>
+  <canvas id="trendChart" height="120"></canvas>
+</section>
+
+<section class="panel">
+  <h2>近期轨迹</h2>
+  <div class="timeline-grid">
+    {% for row in timeline %}
+      <article class="timeline-item">
+        <h3>{{ row.record_date }}</h3>
+        <p>身高：{{ row.height_cm or '-' }} cm，体重：{{ row.weight_kg or '-' }} kg，头围：{{ row.head_circumference_cm or '-' }} cm</p>
+        <p>{{ row.note or '无备注' }}</p>
+        {% if row.photo_files %}
+          {% for file in row.photo_files.split(',') %}
+            <img src="{{ url_for('uploaded_file', filename=file) }}" alt="成长照片" />
+          {% endfor %}
+        {% endif %}
+      </article>
+    {% endfor %}
+  </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const chartData = {{ stats.chart | tojson }};
+  const labels = chartData.map(x => x.date);
+  const chart = new Chart(document.getElementById('trendChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {label: '身高(cm)', data: chartData.map(x => x.height), borderColor: '#4f46e5', spanGaps: true},
+        {label: '体重(kg)', data: chartData.map(x => x.weight), borderColor: '#059669', spanGaps: true},
+        {label: '头围(cm)', data: chartData.map(x => x.head), borderColor: '#dc2626', spanGaps: true}
+      ]
+    },
+    options: {responsive: true, maintainAspectRatio: false}
+  });
+</script>
+{% endblock %}

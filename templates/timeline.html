@@ -1,0 +1,23 @@
+{% extends 'layout.html' %}
+{% block title %}成长轨迹 - 语沁成长记录{% endblock %}
+{% block content %}
+<section class="panel">
+  <h2>成长轨迹展示</h2>
+  {% for row in records %}
+    <article class="timeline-item">
+      <h3>{{ row.record_date }}</h3>
+      <p>身高：{{ row.height_cm or '-' }} cm ｜ 体重：{{ row.weight_kg or '-' }} kg ｜ 头围：{{ row.head_circumference_cm or '-' }} cm</p>
+      <p>{{ row.note or '无备注' }}</p>
+      {% if row.photo_files %}
+      <div class="photo-list">
+        {% for file in row.photo_files.split(',') %}
+        <img src="{{ url_for('uploaded_file', filename=file) }}" alt="成长照片" />
+        {% endfor %}
+      </div>
+      {% endif %}
+    </article>
+  {% else %}
+    <p>还没有任何记录，快去 H5 提交第一条吧。</p>
+  {% endfor %}
+</section>
+{% endblock %}
