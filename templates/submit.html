@@ -1,31 +1,42 @@
 {% extends 'layout.html' %}
 {% block title %}H5提交 - 语沁成长记录{% endblock %}
 {% block content %}
-<section class="panel form-panel">
+<section class="panel form-panel" id="submitApp">
   <h2>H5 提交成长信息</h2>
-  <p class="subtle">表单做了手机优先优化：输入友好、提示清晰、支持照片预览。</p>
+  <p class="subtle">页面已切换为轻量 Vue 交互：手机录入更顺手，依旧无需复杂前端工程。</p>
 
-  <form method="post" enctype="multipart/form-data" class="mobile-form" id="growthForm">
+  <form method="post" enctype="multipart/form-data" class="mobile-form" id="growthForm" @submit="onSubmit">
     <label>记录日期
-      <input type="date" name="record_date" required />
+      <input type="date" name="record_date" required v-model="form.record_date" />
     </label>
     <label>身高(cm)
-      <input type="number" step="0.1" name="height_cm" inputmode="decimal" placeholder="例如 85.6" />
+      <input type="number" step="0.1" name="height_cm" inputmode="decimal" placeholder="例如 85.6" v-model="form.height_cm" />
     </label>
     <label>体重(kg)
-      <input type="number" step="0.1" name="weight_kg" inputmode="decimal" placeholder="例如 11.2" />
+      <input type="number" step="0.1" name="weight_kg" inputmode="decimal" placeholder="例如 11.2" v-model="form.weight_kg" />
     </label>
     <label>头围(cm)
-      <input type="number" step="0.1" name="head_circumference_cm" inputmode="decimal" placeholder="例如 47.1" />
+      <input type="number" step="0.1" name="head_circumference_cm" inputmode="decimal" placeholder="例如 47.1" v-model="form.head_circumference_cm" />
     </label>
     <label>备注
-      <textarea name="note" rows="3" placeholder="今天会自己说完整句子了～"></textarea>
+      <textarea name="note" rows="3" placeholder="今天会自己说完整句子了～" v-model="form.note"></textarea>
     </label>
     <label>照片（可多选）
-      <input type="file" name="photos" id="photoInput" accept="image/*" multiple />
+      <input type="file" name="photos" id="photoInput" accept="image/*" multiple @change="onFilesChange" />
     </label>
-    <div id="photoPreview" class="photo-preview" aria-live="polite"></div>
-    <button type="submit" class="btn btn-primary">提交记录</button>
+
+    <div class="photo-preview" aria-live="polite">
+      <img v-for="item in previews" :key="item.name" :src="item.url" :alt="`预览-${item.name}`" />
+    </div>
+
+    <button type="submit" class="btn btn-primary" :disabled="submitting">
+      [[ submitting ? '提交中...' : '提交记录' ]]
+    </button>
   </form>
 </section>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script src="{{ url_for('static', filename='js/submit-vue.js') }}"></script>
 {% endblock %}
