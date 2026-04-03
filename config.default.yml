@@ -1,0 +1,30 @@
+app:
+  app_name: "语沁成长记录"
+  secret_key: "please-change-me"
+
+security:
+  access_password: "无敌可爱语沁"
+  session_days: 1
+
+server:
+  host: "0.0.0.0"
+  port: 8000
+
+database:
+  sqlite_path: "./data/yqlog.db"
+
+storage:
+  upload_dir: "./uploads"
+  album_max_photos: 200
+  max_image_size_bytes: 10485760
+  max_content_length: 62914560
+  allowed_extensions:
+    - png
+    - jpg
+    - jpeg
+    - webp
+    - gif
+
+stats:
+  milk_days: 30
+  poop_days: 30

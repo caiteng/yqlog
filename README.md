@@ -31,21 +31,59 @@ python app.py
 - 快捷录入：<http://127.0.0.1:8000/quick>
 - 相册模块：<http://127.0.0.1:8000/album>
 
-## 配置说明
+## 配置说明（默认配置 + 外部覆盖）
 
-可通过环境变量配置（推荐），默认值在 `config.py`：
+系统启动时会按以下优先级加载配置（高 -> 低）：
 
-- `FLASK_SECRET_KEY`：Session 密钥
-- `ACCESS_PASSWORD`：录入口令（默认 `无敌可爱语沁`）
-- `SESSION_DAYS`：Session 有效天数（默认 1 天）
-- `DATABASE_PATH`：SQLite 路径
-- `UPLOAD_FOLDER`：上传目录
+1. 容器内覆盖配置：`/app/config.override.yml`
+2. 服务器固定路径配置：`/opt/yqlog/config.yml`
+3. 项目默认配置：`config.default.yml`
+4. 代码内兜底默认值：`config.py`
 
-- `MAX_IMAGE_SIZE_BYTES`：单张图片大小限制（默认 10MB）
-- `ALBUM_MAX_PHOTOS`：相册最大照片数（默认 200）
-- `MAX_CONTENT_LENGTH`：单次请求体积限制（默认 60MB）
+也就是说：只要服务器上配置文件存在，就会覆盖项目默认配置；若外部配置不存在，系统仍可使用项目内默认配置正常运行。
 
-可复制 `.env.example` 到 `.env` 后按需修改。
+### 配置文件结构（YAML）
+
+```yaml
+app:
+  app_name: "语沁成长记录"
+  secret_key: "please-change-me"
+
+security:
+  access_password: "无敌可爱语沁"
+  session_days: 1
+
+server:
+  host: "0.0.0.0"
+  port: 8000
+
+database:
+  sqlite_path: "./data/yqlog.db"
+
+storage:
+  upload_dir: "./uploads"
+  album_max_photos: 200
+  max_image_size_bytes: 10485760
+  max_content_length: 62914560
+  allowed_extensions: [png, jpg, jpeg, webp, gif]
+
+stats:
+  milk_days: 30
+  poop_days: 30
+```
+
+### 服务器如何修改配置
+
+1. 在宿主机编辑 `/opt/yqlog/config.yml`（建议只写要覆盖的项）。
+2. 若使用 Docker Compose，配置会挂载到容器内 `/app/config.override.yml` 并自动生效优先级最高。
+
+### 修改配置后是否需要重启容器
+
+需要。配置在应用启动时加载，修改后请执行：
+
+```bash
+docker compose up -d
+```
 
 
 ## 可复用 API（为后续小程序预留）
@@ -59,10 +97,10 @@ python app.py
 - `POST /api/v1/album/photos`：上传照片（后端校验 200 张上限）
 - `DELETE /api/v1/album/photos/<photo_id>`：删除照片（删库 + 删物理文件）
 
-相册限制策略：
+相册限制策略（可配置）：
 
 - 相册最多 200 张（后端强校验）
-- 单张图片默认最大 10MB（可通过环境变量调整）
+- 单张图片默认最大 10MB（通过配置文件调整）
 
 ## 服务器目录约定（自动部署）
 
@@ -89,10 +127,10 @@ BRANCH='main' \
 bash /opt/yqlog/app/scripts/server-init.sh
 ```
 
-执行后请编辑 `/opt/yqlog/app/.env`，至少修改：
+执行后请编辑 `/opt/yqlog/config.yml`，至少修改：
 
-- `FLASK_SECRET_KEY`
-- `ACCESS_PASSWORD`
+- `app.secret_key`
+- `security.access_password`
 
 ## 自动部署（merge/push main 自动触发）
 
@@ -128,7 +166,8 @@ bash /opt/yqlog/app/scripts/deploy.sh
 ## 项目结构（核心）
 
 - `app.py`：路由、数据库、看板统计、相册上传删除
-- `config.py`：轻量配置
+- `config.py`：配置加载与优先级合并逻辑
+- `config.default.yml`：项目内默认配置
 - `scripts/server-init.sh`：首服初始化脚本
 - `scripts/deploy.sh`：自动部署脚本
 - `docker-compose.yml`：容器与数据卷定义
