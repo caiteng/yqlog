@@ -1,21 +1,27 @@
 {% extends 'layout.html' %}
-{% block title %}拉臭臭记录 - 语沁成长记录{% endblock %}
+{% block title %}记录拉臭臭 - 语沁成长记录{% endblock %}
 {% block content %}
 <section class="panel record-panel" id="poopApp">
   <div class="record-icon">💩</div>
-  <h2>拉臭臭记录</h2>
   <form method="post" class="mobile-form record-form" @submit="onSubmit">
     <label class="time-label">当前时间</label>
     <input class="time-input" type="datetime-local" name="record_time" required v-model="record_time" />
 
-    <div class="status-group">
-      <button type="button" class="status-item" :class="{active: poop_status==='正常'}" @click="poop_status='正常'">正常</button>
+    <label class="time-label">状态</label>
+    <div class="status-group two-col">
+      <button type="button" class="status-item" :class="{active: statusType==='正常'}" @click="setNormal">正常</button>
+      <button type="button" class="status-item" :class="{active: statusType==='异常'}" @click="setAbnormal">异常</button>
+    </div>
+
+    <div class="status-group" v-if="statusType === '异常'">
       <button type="button" class="status-item" :class="{active: poop_status==='奶瓣'}" @click="poop_status='奶瓣'">奶瓣</button>
       <button type="button" class="status-item" :class="{active: poop_status==='酸臭'}" @click="poop_status='酸臭'">酸臭</button>
     </div>
+
     <input type="hidden" name="poop_status" :value="poop_status" />
 
-    <button type="submit" class="btn btn-primary big-btn" :disabled="submitting || !poop_status">[[ submitting ? '提交中...' : '完成记录' ]]</button>
+    <button type="submit" class="btn btn-primary big-btn" :disabled="submitting || !poop_status">保存记录</button>
+    <a class="btn btn-soft big-btn" href="{{ url_for('quick_entry') }}">返回</a>
   </form>
 </section>
 {% endblock %}
@@ -32,11 +38,22 @@
     data() {
       return {
         record_time: '{{ default_time }}',
+        statusType: '正常',
         poop_status: '正常',
         submitting: false,
       };
     },
     methods: {
+      setNormal() {
+        this.statusType = '正常';
+        this.poop_status = '正常';
+      },
+      setAbnormal() {
+        this.statusType = '异常';
+        if (this.poop_status === '正常') {
+          this.poop_status = '奶瓣';
+        }
+      },
       onSubmit() {
         this.submitting = true;
       }

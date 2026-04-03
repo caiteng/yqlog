@@ -17,17 +17,14 @@
   <header class="topbar">
     <a class="brand" href="{{ url_for('index') }}">
       <span class="brand-logo">🌸</span>
-      <div>
-        <strong>{{ app_name }}</strong>
-        <small>轻量 · 温馨 · 手机友好</small>
-      </div>
+      <strong>{{ app_name }}</strong>
     </a>
-    <nav>
-      <a href="{{ url_for('index') }}">首页看板</a>
-      <a href="{{ url_for('quick_entry') }}">快捷录入</a>
+    <nav class="desktop-nav" aria-label="主导航">
+      <a href="{{ url_for('index') }}">首页</a>
+      <a href="{{ url_for('quick_entry') }}">快捷记录</a>
       <a href="{{ url_for('album') }}">相册</a>
-      <a href="{{ url_for('timeline') }}">记录流</a>
-      <a href="{{ url_for('unlock') }}">解锁</a>
+      <a href="{{ url_for('timeline') }}">时间线</a>
+      <a class="btn btn-soft nav-unlock" href="{{ url_for('unlock') }}">🔓 解锁</a>
     </nav>
   </header>
 
@@ -44,6 +41,13 @@
   <main class="container">
     {% block content %}{% endblock %}
   </main>
+
+  <nav class="mobile-tabbar" aria-label="底部导航">
+    <a href="{{ url_for('index') }}">🏠<span>首页</span></a>
+    <a href="{{ url_for('quick_entry') }}">🍼<span>记录</span></a>
+    <a href="{{ url_for('album') }}">📷<span>相册</span></a>
+    <a href="{{ url_for('timeline') }}">🕒<span>时间线</span></a>
+  </nav>
 
   {% block scripts %}{% endblock %}
 </body>

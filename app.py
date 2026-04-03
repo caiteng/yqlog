@@ -152,6 +152,15 @@ def query_dashboard() -> Dict[str, Any]:
             (f"-{app.config['MILK_STATS_DAYS'] - 1} day",),
         ).fetchall()
 
+        poop_today = conn.execute(
+            """
+            SELECT COUNT(*) AS count
+            FROM poop_records
+            WHERE DATE(record_time) = ?
+            """,
+            (today,),
+        ).fetchone()
+
         poop_last = conn.execute(
             """
             SELECT record_time
@@ -200,6 +209,7 @@ def query_dashboard() -> Dict[str, Any]:
             "milk_count": milk_today["count"] if milk_today else 0,
             "milk_total_ml": milk_today["total_ml"] if milk_today else 0,
             "last_milk_time": milk_today["last_time"] if milk_today else None,
+            "today_poop_count": poop_today["count"] if poop_today else 0,
             "last_poop_time": poop_last["record_time"] if poop_last else None,
         },
         "milk_chart": [dict(row) for row in milk_daily],

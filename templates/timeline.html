@@ -1,9 +1,11 @@
 {% extends 'layout.html' %}
-{% block title %}记录流 - 语沁成长记录{% endblock %}
+{% block title %}时间线 - 语沁成长记录{% endblock %}
 {% block content %}
 <section class="panel">
-  <h2>成长记录流</h2>
-  <p class="subtle">按时间倒序看语沁每一次喝奶和拉臭臭记录。</p>
+  <div class="panel-head">
+    <h2>成长时间线</h2>
+    <a class="btn btn-soft" href="{{ url_for('quick_entry') }}">去记录</a>
+  </div>
   {% for row in records %}
     <article class="timeline-item">
       <h3>{{ row.type }} · {{ row.time }}</h3>
@@ -12,8 +14,8 @@
   {% else %}
     <article class="timeline-item empty">
       <h3>还没有记录</h3>
-      <p>去快捷录入页，几秒就能记一条。</p>
-      <a class="btn btn-soft" href="{{ url_for('quick_entry') }}">去记录</a>
+      <p>先新增一条记录吧。</p>
+      <a class="btn btn-primary" href="{{ url_for('quick_entry') }}">立即记录</a>
     </article>
   {% endfor %}
 </section>

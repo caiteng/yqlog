@@ -1,24 +1,23 @@
 {% extends 'layout.html' %}
-{% block title %}快捷录入 - 语沁成长记录{% endblock %}
+{% block title %}快捷记录 - 语沁成长记录{% endblock %}
 {% block content %}
 <section class="panel quick-panel" id="quickApp">
-  <h2>快捷录入</h2>
-  <p class="subtle">一眼可见，一键进入，适合手机单手快速记录。</p>
+  <h2>快捷记录</h2>
   <div class="quick-grid">
     <a class="quick-card" href="{{ url_for('milk_record') }}">
       <div class="quick-icon">🍼</div>
-      <h3>喝奶</h3>
-      <p>记录时间 + ML 数</p>
+      <h3>记录喝奶</h3>
+      <p>输入时间和奶量</p>
     </a>
     <a class="quick-card" href="{{ url_for('poop_record') }}">
       <div class="quick-icon">💩</div>
-      <h3>拉臭臭</h3>
-      <p>记录时间 + 状态</p>
+      <h3>记录拉臭臭</h3>
+      <p>选择状态并保存</p>
     </a>
     <a class="quick-card" href="{{ url_for('album') }}">
       <div class="quick-icon">📷</div>
-      <h3>相册上传</h3>
-      <p>上传 / 预览 / 删除</p>
+      <h3>上传照片</h3>
+      <p>上传、预览、删除</p>
     </a>
   </div>
 </section>

@@ -1,19 +1,20 @@
 {% extends 'layout.html' %}
-{% block title %}喝奶记录 - 语沁成长记录{% endblock %}
+{% block title %}记录喝奶 - 语沁成长记录{% endblock %}
 {% block content %}
 <section class="panel record-panel" id="milkApp">
   <div class="record-icon">🍼</div>
-  <h2>喝奶记录</h2>
   <form method="post" class="mobile-form record-form" @submit="onSubmit">
     <label class="time-label">当前时间</label>
     <input class="time-input" type="datetime-local" name="record_time" required v-model="record_time" />
 
+    <label class="time-label">奶量</label>
     <label class="ml-field">
-      <input type="number" min="1" step="1" inputmode="numeric" name="milk_ml" required placeholder="输入 ml 数" v-model="milk_ml" />
+      <input type="number" min="1" step="1" inputmode="numeric" name="milk_ml" required placeholder="输入数字" v-model="milk_ml" />
       <span>ML</span>
     </label>
 
-    <button type="submit" class="btn btn-primary big-btn" :disabled="submitting">[[ submitting ? '提交中...' : '完成记录' ]]</button>
+    <button type="submit" class="btn btn-primary big-btn" :disabled="submitting">保存记录</button>
+    <a class="btn btn-soft big-btn" href="{{ url_for('quick_entry') }}">返回</a>
   </form>
 </section>
 {% endblock %}
