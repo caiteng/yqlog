@@ -205,6 +205,10 @@ body {
 .flash-warning { background: #fff8df; border-color: #ffe9a4; }
 
 .unlock-panel { max-width: 520px; margin-left: auto; margin-right: auto; }
+.password-mask {
+  -webkit-text-security: disc;
+  text-security: disc;
+}
 
 .mobile-tabbar {
   display: none;

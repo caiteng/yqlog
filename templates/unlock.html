@@ -9,10 +9,14 @@
     <input type="hidden" name="next" value="{{ next_url }}" />
     <label>口令
       <input
-        :type="showPassword ? 'text' : 'password'"
+        type="text"
+        :class="{ 'password-mask': !showPassword }"
         name="password"
         required
         autocomplete="off"
+        autocapitalize="none"
+        autocorrect="off"
+        spellcheck="false"
         placeholder="请输入录入口令"
         v-model="password"
       />
