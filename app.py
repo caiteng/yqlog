@@ -2,11 +2,12 @@ import sqlite3
 from datetime import datetime, timedelta
 from functools import wraps
 from pathlib import Path
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from flask import (
     Flask,
     flash,
+    jsonify,
     redirect,
     render_template,
     request,
@@ -14,6 +15,8 @@ from flask import (
     session,
     url_for,
 )
+from werkzeug.datastructures import FileStorage
+from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.utils import secure_filename
 
 from config import Config
@@ -81,6 +84,8 @@ def require_unlock(view: Callable[..., Any]) -> Callable[..., Any]:
     @wraps(view)
     def wrapped(*args: Any, **kwargs: Any):
         if not session.get("unlocked"):
+            if is_api_request():
+                return api_error("请先输入口令后再操作", status=401)
             flash("请先输入口令后再进行录入", "warning")
             return redirect(url_for("unlock", next=request.path))
         return view(*args, **kwargs)
@@ -100,6 +105,18 @@ def normalize_record_time(raw_value: str) -> str:
 
 def record_time_input_default() -> str:
     return datetime.now().strftime("%Y-%m-%dT%H:%M")
+
+
+def is_api_request() -> bool:
+    return request.path.startswith("/api/")
+
+
+def api_ok(data: Dict[str, Any], status: int = 200):
+    return jsonify({"ok": True, **data}), status
+
+
+def api_error(message: str, status: int = 400):
+    return jsonify({"ok": False, "message": message}), status
 
 
 def query_dashboard() -> Dict[str, Any]:
@@ -232,6 +249,133 @@ def query_timeline() -> List[Dict[str, str]]:
     return events[:100]
 
 
+def create_milk_record(record_time: str, milk_ml: int) -> None:
+    now = datetime.utcnow().isoformat()
+    with get_conn() as conn:
+        conn.execute(
+            "INSERT INTO milk_records (record_time, milk_ml, created_at) VALUES (?, ?, ?)",
+            (record_time, milk_ml, now),
+        )
+
+
+def create_poop_record(record_time: str, poop_status: str) -> None:
+    now = datetime.utcnow().isoformat()
+    with get_conn() as conn:
+        conn.execute(
+            "INSERT INTO poop_records (record_time, poop_status, created_at) VALUES (?, ?, ?)",
+            (record_time, poop_status, now),
+        )
+
+
+def list_album_photos(limit: Optional[int] = None) -> List[Dict[str, Any]]:
+    with get_conn() as conn:
+        query = """
+            SELECT id, image_path, created_at
+            FROM album_photos
+            ORDER BY created_at DESC
+        """
+        params: Tuple[Any, ...] = ()
+        if limit:
+            query += " LIMIT ?"
+            params = (limit,)
+        photos = conn.execute(query, params).fetchall()
+    return [dict(row) for row in photos]
+
+
+def get_album_count(conn: sqlite3.Connection) -> int:
+    row = conn.execute("SELECT COUNT(*) AS count FROM album_photos").fetchone()
+    return row["count"] if row else 0
+
+
+def file_size_bytes(file: FileStorage) -> int:
+    if file.content_length is not None:
+        return file.content_length
+
+    stream = file.stream
+    current_position = stream.tell()
+    stream.seek(0, 2)
+    size = stream.tell()
+    stream.seek(current_position)
+    return size
+
+
+def upload_album_photos(files: List[FileStorage]) -> Dict[str, Any]:
+    if not files:
+        return {"saved": 0, "warnings": ["请选择要上传的照片"], "limit_reached": False}
+
+    now = datetime.utcnow().isoformat()
+    saved = 0
+    warnings: List[str] = []
+    limit_reached = False
+    max_count = app.config["ALBUM_MAX_PHOTOS"]
+    max_image_size = app.config["MAX_IMAGE_SIZE_BYTES"]
+
+    with get_conn() as conn:
+        album_count = get_album_count(conn)
+        for file in files:
+            if not file or not file.filename:
+                continue
+
+            if album_count >= max_count:
+                limit_reached = True
+                warnings.append(f"相册最多允许 {max_count} 张照片，请先删除照片，再继续上传")
+                break
+
+            if not allowed_file(file.filename):
+                warnings.append(f"文件 {file.filename} 格式不支持，已跳过")
+                continue
+
+            if file_size_bytes(file) > max_image_size:
+                warnings.append(
+                    f"文件 {file.filename} 超过单张大小限制（{max_image_size // (1024 * 1024)}MB），已跳过"
+                )
+                continue
+
+            safe_name = secure_filename(file.filename)
+            unique_name = f"album_{int(datetime.utcnow().timestamp() * 1000)}_{safe_name}"
+            file.save(app.config["UPLOAD_FOLDER"] / unique_name)
+            conn.execute(
+                "INSERT INTO album_photos (image_path, created_at) VALUES (?, ?)",
+                (unique_name, now),
+            )
+            saved += 1
+            album_count += 1
+
+    return {
+        "saved": saved,
+        "warnings": warnings,
+        "limit_reached": limit_reached,
+        "album_max_photos": max_count,
+    }
+
+
+def delete_album_photo(photo_id: int) -> bool:
+    with get_conn() as conn:
+        photo = conn.execute(
+            "SELECT id, image_path FROM album_photos WHERE id = ?",
+            (photo_id,),
+        ).fetchone()
+
+        if not photo:
+            return False
+
+        conn.execute("DELETE FROM album_photos WHERE id = ?", (photo_id,))
+
+    file_path = app.config["UPLOAD_FOLDER"] / photo["image_path"]
+    if file_path.exists():
+        file_path.unlink()
+    return True
+
+
+@app.errorhandler(RequestEntityTooLarge)
+def handle_request_entity_too_large(_: RequestEntityTooLarge):
+    message = "上传请求太大，请减少单次上传数量或图片体积"
+    if is_api_request():
+        return api_error(message, status=413)
+    flash(message, "error")
+    return redirect(url_for("album"))
+
+
 @app.route("/")
 def index():
     dashboard = query_dashboard()
@@ -295,12 +439,7 @@ def milk_record():
             flash("ML 数需要大于 0", "error")
             return redirect(url_for("milk_record"))
 
-        now = datetime.utcnow().isoformat()
-        with get_conn() as conn:
-            conn.execute(
-                "INSERT INTO milk_records (record_time, milk_ml, created_at) VALUES (?, ?, ?)",
-                (record_time, milk_ml, now),
-            )
+        create_milk_record(record_time, milk_ml)
 
         flash("喝奶记录已保存", "success")
         return redirect(url_for("quick_entry"))
@@ -329,12 +468,7 @@ def poop_record():
             flash("时间格式不正确", "error")
             return redirect(url_for("poop_record"))
 
-        now = datetime.utcnow().isoformat()
-        with get_conn() as conn:
-            conn.execute(
-                "INSERT INTO poop_records (record_time, poop_status, created_at) VALUES (?, ?, ?)",
-                (record_time, poop_status, now),
-            )
+        create_poop_record(record_time, poop_status)
 
         flash("拉臭臭记录已保存", "success")
         return redirect(url_for("quick_entry"))
@@ -345,71 +479,124 @@ def poop_record():
 @app.route("/album")
 @require_unlock
 def album():
-    with get_conn() as conn:
-        photos = conn.execute(
-            """
-            SELECT id, image_path, created_at
-            FROM album_photos
-            ORDER BY created_at DESC
-            """
-        ).fetchall()
-    return render_template("album.html", photos=photos)
+    photos = list_album_photos()
+    return render_template(
+        "album.html",
+        photos=photos,
+        album_max_photos=app.config["ALBUM_MAX_PHOTOS"],
+        album_current_count=len(photos),
+        max_image_size_mb=app.config["MAX_IMAGE_SIZE_BYTES"] // (1024 * 1024),
+    )
 
 
 @app.route("/album/upload", methods=["POST"])
 @require_unlock
 def album_upload():
     files = request.files.getlist("photos")
-    if not files:
-        flash("请选择要上传的照片", "warning")
-        return redirect(url_for("album"))
+    result = upload_album_photos(files)
 
-    now = datetime.utcnow().isoformat()
-    saved = 0
+    if result["saved"]:
+        flash(f"已上传 {result['saved']} 张照片", "success")
+    for warning in result["warnings"]:
+        flash(warning, "warning")
 
-    with get_conn() as conn:
-        for file in files:
-            if not file or not file.filename:
-                continue
-            if not allowed_file(file.filename):
-                flash(f"文件 {file.filename} 格式不支持，已跳过", "warning")
-                continue
-
-            safe_name = secure_filename(file.filename)
-            unique_name = f"album_{int(datetime.utcnow().timestamp() * 1000)}_{safe_name}"
-            file.save(app.config["UPLOAD_FOLDER"] / unique_name)
-            conn.execute(
-                "INSERT INTO album_photos (image_path, created_at) VALUES (?, ?)",
-                (unique_name, now),
-            )
-            saved += 1
-
-    if saved:
-        flash(f"已上传 {saved} 张照片", "success")
     return redirect(url_for("album"))
 
 
 @app.route("/album/delete/<int:photo_id>", methods=["POST"])
 @require_unlock
 def album_delete(photo_id: int):
-    with get_conn() as conn:
-        photo = conn.execute(
-            "SELECT id, image_path FROM album_photos WHERE id = ?",
-            (photo_id,),
-        ).fetchone()
-
-        if not photo:
-            flash("照片不存在", "warning")
-            return redirect(url_for("album"))
-
-        conn.execute("DELETE FROM album_photos WHERE id = ?", (photo_id,))
-
-    file_path = app.config["UPLOAD_FOLDER"] / photo["image_path"]
-    if file_path.exists():
-        file_path.unlink()
+    deleted = delete_album_photo(photo_id)
+    if not deleted:
+        flash("照片不存在", "warning")
+        return redirect(url_for("album"))
 
     flash("照片已删除", "success")
     return redirect(url_for("album"))
+
+
+@app.route("/api/v1/dashboard", methods=["GET"])
+def api_dashboard():
+    return api_ok({"data": query_dashboard()})
+
+
+@app.route("/api/v1/records/milk", methods=["POST"])
+@require_unlock
+def api_create_milk_record():
+    payload = request.get_json(silent=True) or {}
+    record_time_raw = str(payload.get("record_time", "")).strip()
+    milk_ml_raw = payload.get("milk_ml", "")
+
+    if not record_time_raw or milk_ml_raw == "":
+        return api_error("请提供 record_time 和 milk_ml")
+
+    try:
+        record_time = normalize_record_time(record_time_raw)
+        milk_ml = int(milk_ml_raw)
+    except ValueError:
+        return api_error("record_time 格式需为 YYYY-MM-DDTHH:MM，milk_ml 必须是整数")
+
+    if milk_ml <= 0:
+        return api_error("milk_ml 必须大于 0")
+
+    create_milk_record(record_time, milk_ml)
+    return api_ok({"message": "喝奶记录已保存"}, status=201)
+
+
+@app.route("/api/v1/records/poop", methods=["POST"])
+@require_unlock
+def api_create_poop_record():
+    payload = request.get_json(silent=True) or {}
+    record_time_raw = str(payload.get("record_time", "")).strip()
+    poop_status = str(payload.get("poop_status", "")).strip()
+
+    if not record_time_raw or not poop_status:
+        return api_error("请提供 record_time 和 poop_status")
+
+    if poop_status not in POOP_STATUS_OPTIONS:
+        return api_error("poop_status 不支持，请使用：正常/奶瓣/酸臭")
+
+    try:
+        record_time = normalize_record_time(record_time_raw)
+    except ValueError:
+        return api_error("record_time 格式需为 YYYY-MM-DDTHH:MM")
+
+    create_poop_record(record_time, poop_status)
+    return api_ok({"message": "拉臭臭记录已保存"}, status=201)
+
+
+@app.route("/api/v1/album/photos", methods=["GET"])
+@require_unlock
+def api_album_photos():
+    photos = list_album_photos()
+    return api_ok(
+        {
+            "data": photos,
+            "meta": {
+                "total": len(photos),
+                "max_photos": app.config["ALBUM_MAX_PHOTOS"],
+                "remaining": app.config["ALBUM_MAX_PHOTOS"] - len(photos),
+            },
+        }
+    )
+
+
+@app.route("/api/v1/album/photos", methods=["POST"])
+@require_unlock
+def api_album_upload_photos():
+    files = request.files.getlist("photos")
+    result = upload_album_photos(files)
+    status = 201 if result["saved"] else 400
+    return api_ok({"data": result}, status=status)
+
+
+@app.route("/api/v1/album/photos/<int:photo_id>", methods=["DELETE"])
+@require_unlock
+def api_album_delete(photo_id: int):
+    deleted = delete_album_photo(photo_id)
+    if not deleted:
+        return api_error("照片不存在", status=404)
+    return api_ok({"message": "照片已删除"})
 
 
 @app.route("/uploads/<path:filename>")
