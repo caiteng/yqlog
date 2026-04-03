@@ -3,6 +3,7 @@
 {% block content %}
 <section class="panel">
   <h2>成长轨迹展示</h2>
+  <p class="subtle">每条记录都按日期整理，便于家人回看成长过程。</p>
   {% for row in records %}
     <article class="timeline-item">
       <h3>{{ row.record_date }}</h3>
@@ -11,13 +12,17 @@
       {% if row.photo_files %}
       <div class="photo-list">
         {% for file in row.photo_files.split(',') %}
-        <img src="{{ url_for('uploaded_file', filename=file) }}" alt="成长照片" />
+        <img src="{{ url_for('uploaded_file', filename=file) }}" alt="成长照片" loading="lazy" />
         {% endfor %}
       </div>
       {% endif %}
     </article>
   {% else %}
-    <p>还没有任何记录，快去 H5 提交第一条吧。</p>
+    <article class="timeline-item empty">
+      <h3>还没有任何记录</h3>
+      <p>快去 H5 页面添加第一条成长日志吧。</p>
+      <a class="btn btn-soft" href="{{ url_for('submit') }}">去提交</a>
+    </article>
   {% endfor %}
 </section>
 {% endblock %}

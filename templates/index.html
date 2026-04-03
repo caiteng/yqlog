@@ -1,6 +1,18 @@
 {% extends 'layout.html' %}
 {% block title %}首页 - 语沁成长记录{% endblock %}
 {% block content %}
+<section class="hero panel">
+  <div>
+    <p class="eyebrow">成长仪表盘</p>
+    <h2>把每个可爱瞬间，都变成精致回忆 ✨</h2>
+    <p class="hero-desc">轻松记录身高、体重、头围和照片，自动生成趋势图与时间线，手机上也能快速填报。</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="{{ url_for('submit') }}">立即记录今天</a>
+      <a class="btn btn-soft" href="{{ url_for('timeline') }}">查看完整轨迹</a>
+    </div>
+  </div>
+</section>
+
 <section class="cards">
   <div class="card"><p>总记录数</p><strong>{{ stats.total_records }}</strong></div>
   <div class="card"><p>最近记录</p><strong>{{ stats.latest_date or '暂无' }}</strong></div>
@@ -10,7 +22,8 @@
 </section>
 
 <section class="panel">
-  <h2>成长趋势大屏</h2>
+  <h2>成长趋势</h2>
+  <p class="subtle">温柔曲线，一眼看见语沁每天的变化。</p>
   <canvas id="trendChart" height="120"></canvas>
 </section>
 
@@ -24,9 +37,14 @@
         <p>{{ row.note or '无备注' }}</p>
         {% if row.photo_files %}
           {% for file in row.photo_files.split(',') %}
-            <img src="{{ url_for('uploaded_file', filename=file) }}" alt="成长照片" />
+            <img src="{{ url_for('uploaded_file', filename=file) }}" alt="成长照片" loading="lazy" />
           {% endfor %}
         {% endif %}
+      </article>
+    {% else %}
+      <article class="timeline-item empty">
+        <h3>还没有记录</h3>
+        <p>点击「立即记录今天」，从第一条可爱成长日志开始。</p>
       </article>
     {% endfor %}
   </div>
@@ -41,9 +59,9 @@
     data: {
       labels,
       datasets: [
-        {label: '身高(cm)', data: chartData.map(x => x.height), borderColor: '#4f46e5', spanGaps: true},
-        {label: '体重(kg)', data: chartData.map(x => x.weight), borderColor: '#059669', spanGaps: true},
-        {label: '头围(cm)', data: chartData.map(x => x.head), borderColor: '#dc2626', spanGaps: true}
+        {label: '身高(cm)', data: chartData.map(x => x.height), borderColor: '#ff6ea9', backgroundColor: '#ff6ea966', tension: 0.3, spanGaps: true},
+        {label: '体重(kg)', data: chartData.map(x => x.weight), borderColor: '#7c8bff', backgroundColor: '#7c8bff66', tension: 0.3, spanGaps: true},
+        {label: '头围(cm)', data: chartData.map(x => x.head), borderColor: '#29b6b0', backgroundColor: '#29b6b066', tension: 0.3, spanGaps: true}
       ]
     },
     options: {responsive: true, maintainAspectRatio: false}

@@ -2,27 +2,30 @@
 {% block title %}H5提交 - 语沁成长记录{% endblock %}
 {% block content %}
 <section class="panel form-panel">
-  <h2>H5提交成长信息</h2>
-  <form method="post" enctype="multipart/form-data" class="mobile-form">
+  <h2>H5 提交成长信息</h2>
+  <p class="subtle">表单做了手机优先优化：输入友好、提示清晰、支持照片预览。</p>
+
+  <form method="post" enctype="multipart/form-data" class="mobile-form" id="growthForm">
     <label>记录日期
       <input type="date" name="record_date" required />
     </label>
     <label>身高(cm)
-      <input type="number" step="0.1" name="height_cm" placeholder="例如 85.6" />
+      <input type="number" step="0.1" name="height_cm" inputmode="decimal" placeholder="例如 85.6" />
     </label>
     <label>体重(kg)
-      <input type="number" step="0.1" name="weight_kg" placeholder="例如 11.2" />
+      <input type="number" step="0.1" name="weight_kg" inputmode="decimal" placeholder="例如 11.2" />
     </label>
     <label>头围(cm)
-      <input type="number" step="0.1" name="head_circumference_cm" placeholder="例如 47.1" />
+      <input type="number" step="0.1" name="head_circumference_cm" inputmode="decimal" placeholder="例如 47.1" />
     </label>
     <label>备注
       <textarea name="note" rows="3" placeholder="今天会自己说完整句子了～"></textarea>
     </label>
     <label>照片（可多选）
-      <input type="file" name="photos" accept="image/*" multiple />
+      <input type="file" name="photos" id="photoInput" accept="image/*" multiple />
     </label>
-    <button type="submit">提交</button>
+    <div id="photoPreview" class="photo-preview" aria-live="polite"></div>
+    <button type="submit" class="btn btn-primary">提交记录</button>
   </form>
 </section>
 {% endblock %}

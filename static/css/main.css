@@ -1,46 +1,212 @@
 :root {
-  --bg: #f8fafc;
+  --bg: #fff7fb;
   --card: #ffffff;
-  --text: #0f172a;
-  --brand: #4f46e5;
+  --text: #3f2a40;
+  --muted: #7e667f;
+  --brand: #ff6ea9;
+  --brand-deep: #e84d92;
+  --accent: #7c8bff;
+  --line: #f3d9ea;
 }
+
 * { box-sizing: border-box; }
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
-  background: var(--bg);
+  background: linear-gradient(180deg, #fff7fb 0%, #fff 100%);
   color: var(--text);
+  min-height: 100vh;
 }
+
+.bg-blobs {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.blob {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(30px);
+  opacity: 0.5;
+}
+
+.blob-1 { width: 320px; height: 320px; left: -80px; top: -60px; background: #ffd3e8; }
+.blob-2 { width: 260px; height: 260px; right: 5%; top: 20%; background: #d9dcff; }
+.blob-3 { width: 240px; height: 240px; left: 25%; bottom: -80px; background: #c6f7ef; }
+
 .topbar {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 12px 20px; background: #111827; color: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px;
+  margin: 12px auto;
+  max-width: 1100px;
+  background: #ffffffd9;
+  backdrop-filter: blur(8px);
+  border: 1px solid #fff;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(255, 110, 169, 0.16);
 }
-.topbar nav a { color: #fff; margin-left: 14px; text-decoration: none; }
-.container { max-width: 1100px; margin: 20px auto; padding: 0 14px; }
-.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+
+.brand {
+  color: inherit;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-logo {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #ffe5f1;
+}
+
+.brand small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.topbar nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.topbar nav a {
+  color: var(--text);
+  text-decoration: none;
+  padding: 8px 12px;
+  border-radius: 999px;
+}
+
+.topbar nav a:hover { background: #fff0f7; }
+
+.cta {
+  background: linear-gradient(135deg, var(--brand), var(--accent));
+  color: #fff !important;
+}
+
+.container { max-width: 1100px; margin: 16px auto 28px; padding: 0 14px; }
+
+.hero h2 { margin: 8px 0 12px; font-size: clamp(1.2rem, 2.7vw, 2rem); }
+.hero-desc { color: var(--muted); margin: 0 0 14px; }
+.eyebrow {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #ffe8f3;
+  color: var(--brand-deep);
+  font-size: 0.8rem;
+  margin: 0;
+}
+
+.hero-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  padding: 10px 14px;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--brand), var(--accent));
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(124, 139, 255, 0.35);
+}
+
+.btn-soft {
+  background: #fff2f8;
+  color: var(--brand-deep);
+  border: 1px solid #ffd6e8;
+}
+
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-top: 14px; }
 .card, .panel {
-  background: var(--card); border-radius: 12px; padding: 14px;
-  box-shadow: 0 2px 10px rgba(0,0,0,.06);
+  background: var(--card);
+  border-radius: 14px;
+  padding: 16px;
+  border: 1px solid #fff;
+  box-shadow: 0 8px 26px rgba(245, 163, 205, .16);
 }
-.card strong { font-size: 1.4rem; color: var(--brand); }
+.card p { color: var(--muted); margin: 0 0 8px; }
+.card strong { font-size: 1.5rem; color: var(--brand-deep); }
 .panel { margin-top: 14px; }
+.subtle { color: var(--muted); margin-top: -4px; }
+
 .timeline-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; }
-.timeline-item { border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px; margin-bottom: 10px; }
-.timeline-item img, .photo-list img {
-  width: 100%; max-height: 220px; object-fit: cover; border-radius: 8px; margin-top: 8px;
+.timeline-item {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 10px;
+  background: #fff;
 }
+.timeline-item.empty {
+  border-style: dashed;
+  text-align: center;
+}
+.timeline-item img, .photo-list img {
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-top: 8px;
+}
+
 .mobile-form { display: grid; gap: 10px; }
 .mobile-form input, .mobile-form textarea, .mobile-form button {
-  width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 1rem;
+  width: 100%;
+  padding: 11px;
+  border-radius: 10px;
+  border: 1px solid #ebd2e3;
+  font-size: 1rem;
+  background: #fff;
 }
-.mobile-form button {
-  background: var(--brand); color: #fff; border: none; font-weight: 600;
+.mobile-form input:focus, .mobile-form textarea:focus {
+  outline: none;
+  border-color: #f4a7cb;
+  box-shadow: 0 0 0 3px #ffe4f0;
 }
+
+.photo-preview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: 8px;
+}
+.photo-preview img {
+  width: 100%;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid #f2d7e7;
+}
+
 .flash-wrap { max-width: 1100px; margin: 10px auto; padding: 0 14px; }
-.flash { padding: 10px; border-radius: 8px; margin-top: 8px; }
-.flash-success { background: #dcfce7; }
-.flash-error { background: #fee2e2; }
-.flash-warning { background: #fef3c7; }
+.flash {
+  padding: 10px 12px;
+  border-radius: 10px;
+  margin-top: 8px;
+  border: 1px solid transparent;
+}
+.flash-success { background: #e8fff3; border-color: #bcf0d0; }
+.flash-error { background: #ffecec; border-color: #ffd1d1; }
+.flash-warning { background: #fff8df; border-color: #ffe9a4; }
+
 @media (max-width: 768px) {
-  .topbar { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .topbar { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .topbar nav { width: 100%; justify-content: space-between; }
 }
