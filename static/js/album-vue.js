@@ -5,6 +5,7 @@
   }
 
   const { createApp } = window.Vue;
+  const config = window.albumConfig || { albumCurrentCount: 0, albumMaxPhotos: 200 };
 
   createApp({
     delimiters: ["[[", "]]"],
@@ -12,7 +13,15 @@
       return {
         previews: [],
         submitting: false,
+        previewUrl: "",
+        albumCurrentCount: config.albumCurrentCount,
+        albumMaxPhotos: config.albumMaxPhotos,
       };
+    },
+    computed: {
+      albumFull() {
+        return this.albumCurrentCount >= this.albumMaxPhotos;
+      },
     },
     methods: {
       onFilesChange(event) {
@@ -25,7 +34,18 @@
           }));
       },
       onSubmit() {
+        if (this.albumFull) {
+          alert("相册最多 200 张，请先删除照片，再继续上传。");
+          return false;
+        }
         this.submitting = true;
+        return true;
+      },
+      openPreview(url) {
+        this.previewUrl = url;
+      },
+      closePreview() {
+        this.previewUrl = "";
       },
     },
   }).mount("#albumApp");

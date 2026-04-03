@@ -4,6 +4,7 @@
 <section class="panel" id="albumApp">
   <h2>语沁温馨相册</h2>
   <p class="subtle">支持上传、预览、删除，移动端也能轻松操作。</p>
+  <p class="subtle">当前 {{ album_current_count }} / {{ album_max_photos }} 张，单张最大 {{ max_image_size_mb }}MB。</p>
 
   <form class="mobile-form" method="post" action="{{ url_for('album_upload') }}" enctype="multipart/form-data" @submit="onSubmit">
     <label class="upload-btn">
@@ -13,15 +14,15 @@
     <div class="photo-preview" v-if="previews.length">
       <img v-for="img in previews" :key="img.name" :src="img.url" :alt="img.name" />
     </div>
-    <button class="btn btn-primary" type="submit" :disabled="submitting">[[ submitting ? '上传中...' : '上传到相册' ]]</button>
+    <button class="btn btn-primary" type="submit" :disabled="submitting || albumFull">[[ submitting ? '上传中...' : (albumFull ? '相册已满，请先删除' : '上传到相册') ]]</button>
   </form>
 
   <div class="photo-grid album-grid">
     {% for photo in photos %}
     <article class="album-item">
-      <a href="{{ url_for('uploaded_file', filename=photo.image_path) }}" target="_blank" rel="noreferrer">
+      <button type="button" class="thumb-btn" @click="openPreview('{{ url_for('uploaded_file', filename=photo.image_path) }}')">
         <img src="{{ url_for('uploaded_file', filename=photo.image_path) }}" alt="语沁成长照片" loading="lazy" />
-      </a>
+      </button>
       <small>{{ photo.created_at }}</small>
       <form method="post" action="{{ url_for('album_delete', photo_id=photo.id) }}" onsubmit="return confirm('确认删除这张照片吗？')">
         <button class="btn btn-soft" type="submit">删除</button>
@@ -31,10 +32,21 @@
       <p class="subtle">相册还是空的，上传第一张照片吧 ✨</p>
     {% endfor %}
   </div>
+
+  <div class="image-viewer" v-if="previewUrl" @click.self="closePreview">
+    <button type="button" class="viewer-close" @click="closePreview">×</button>
+    <img :src="previewUrl" alt="预览大图" />
+  </div>
 </section>
 {% endblock %}
 
 {% block scripts %}
+<script>
+  window.albumConfig = {
+    albumCurrentCount: {{ album_current_count }},
+    albumMaxPhotos: {{ album_max_photos }},
+  };
+</script>
 <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 <script src="{{ url_for('static', filename='js/album-vue.js') }}"></script>
 {% endblock %}

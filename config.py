@@ -14,5 +14,8 @@ class Config:
     DATABASE_PATH = Path(os.getenv("DATABASE_PATH", str(BASE_DIR / "data" / "yqlog.db")))
     UPLOAD_FOLDER = Path(os.getenv("UPLOAD_FOLDER", str(BASE_DIR / "uploads")))
 
-    MAX_CONTENT_LENGTH = 10 * 1024 * 1024  # 10MB
+    MAX_IMAGE_SIZE_BYTES = int(os.getenv("MAX_IMAGE_SIZE_BYTES", str(10 * 1024 * 1024)))
+    ALBUM_MAX_PHOTOS = int(os.getenv("ALBUM_MAX_PHOTOS", "200"))
+    MAX_CONTENT_LENGTH = int(os.getenv("MAX_CONTENT_LENGTH", str(60 * 1024 * 1024)))
+
     ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "webp", "gif"}

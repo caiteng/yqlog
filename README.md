@@ -4,7 +4,7 @@
 
 - 快捷记录喝奶与拉臭臭
 - 首页大屏看板（今日概览 + 近 30 天趋势）
-- 温馨相册（上传 / 预览 / 删除）
+- 温馨相册（上传 / 放大预览 / 删除）
 - 固定口令解锁（24 小时免重复输入）
 
 ## 技术栈
@@ -41,7 +41,28 @@ python app.py
 - `DATABASE_PATH`：SQLite 路径
 - `UPLOAD_FOLDER`：上传目录
 
+- `MAX_IMAGE_SIZE_BYTES`：单张图片大小限制（默认 10MB）
+- `ALBUM_MAX_PHOTOS`：相册最大照片数（默认 200）
+- `MAX_CONTENT_LENGTH`：单次请求体积限制（默认 60MB）
+
 可复制 `.env.example` 到 `.env` 后按需修改。
+
+
+## 可复用 API（为后续小程序预留）
+
+当前已提供 `/api/v1` 能力，Web/H5 与未来小程序都可复用：
+
+- `GET /api/v1/dashboard`：首页统计数据
+- `POST /api/v1/records/milk`：新增喝奶记录
+- `POST /api/v1/records/poop`：新增拉臭臭记录
+- `GET /api/v1/album/photos`：相册列表 + 容量元信息
+- `POST /api/v1/album/photos`：上传照片（后端校验 200 张上限）
+- `DELETE /api/v1/album/photos/<photo_id>`：删除照片（删库 + 删物理文件）
+
+相册限制策略：
+
+- 相册最多 200 张（后端强校验）
+- 单张图片默认最大 10MB（可通过环境变量调整）
 
 ## 服务器目录约定（自动部署）
 
