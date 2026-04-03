@@ -15,21 +15,35 @@
 - 图表：Chart.js
 - 部署：Docker Compose + GitHub Actions(SSH)
 
-## 本地运行
+## 本地预览（Docker，推荐）
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-python app.py
+docker compose up --build
 ```
 
-启动后访问：
+访问地址：
 
-- 首页看板：<http://127.0.0.1:8000/>
+- 首页看板：<http://localhost:8000/>（或 <http://127.0.0.1:8000/>）
 - 解锁页面：<http://127.0.0.1:8000/unlock>
 - 快捷录入：<http://127.0.0.1:8000/quick>
 - 相册模块：<http://127.0.0.1:8000/album>
+
+说明：
+
+- 本地模式默认不挂载宿主机目录（`data/uploads/config`）。
+- 主要用于快速预览页面和交互。
+- 停掉容器后数据可丢失，这是预期行为。
+
+## 服务器正式部署
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env up -d --build
+```
+
+说明：
+
+- 服务器模式会挂载 `/opt/yqlog/data`、`/opt/yqlog/uploads`、`/opt/yqlog/config.yml`。
+- 容器重建后，SQLite 数据与上传图片会持久化。
 
 ## 配置说明（默认配置 + 外部覆盖）
 
@@ -75,14 +89,14 @@ stats:
 ### 服务器如何修改配置
 
 1. 在宿主机编辑 `/opt/yqlog/config.yml`（建议只写要覆盖的项）。
-2. 若使用 Docker Compose，配置会挂载到容器内 `/app/config.override.yml` 并自动生效优先级最高。
+2. 若使用服务器部署 Compose（`-f docker-compose.yml -f docker-compose.prod.yml`），配置会挂载到容器内 `/app/config.override.yml` 并自动生效优先级最高。
 
 ### 修改配置后是否需要重启容器
 
 需要。配置在应用启动时加载，修改后请执行：
 
 ```bash
-docker compose up -d
+docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env up -d
 ```
 
 
@@ -121,8 +135,6 @@ cd /opt/yqlog/app 2>/dev/null || true
 
 REPO_URL='https://github.com/caiteng/yqlog.git' \
 APP_DIR='/opt/yqlog/app' \
-DATA_DIR='/opt/yqlog/data' \
-UPLOADS_DIR='/opt/yqlog/uploads' \
 BRANCH='main' \
 bash /opt/yqlog/app/scripts/server-init.sh
 ```
@@ -150,7 +162,7 @@ bash /opt/yqlog/app/scripts/deploy.sh
 `deploy.sh` 会：
 
 1. `git fetch + reset --hard origin/main`
-2. `docker compose up -d --build`
+2. `docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env up -d --build`
 3. 若失败，自动回滚到上一个 commit 并再次启动
 
 ## GitHub Secrets
@@ -170,7 +182,8 @@ bash /opt/yqlog/app/scripts/deploy.sh
 - `config.default.yml`：项目内默认配置
 - `scripts/server-init.sh`：首服初始化脚本
 - `scripts/deploy.sh`：自动部署脚本
-- `docker-compose.yml`：容器与数据卷定义
+- `docker-compose.yml`：本地预览默认 Compose（不挂宿主机目录）
+- `docker-compose.prod.yml`：服务器正式部署覆盖 Compose（挂载持久化目录）
 - `.github/workflows/deploy.yml`：GitHub Actions 自动部署
 
 ## 数据表
