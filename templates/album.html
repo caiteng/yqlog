@@ -1,20 +1,23 @@
 {% extends 'layout.html' %}
-{% block title %}语沁相册 - 语沁成长记录{% endblock %}
+{% block title %}相册 - 语沁成长记录{% endblock %}
 {% block content %}
 <section class="panel" id="albumApp">
-  <h2>语沁温馨相册</h2>
-  <p class="subtle">支持上传、预览、删除，移动端也能轻松操作。</p>
-  <p class="subtle">当前 {{ album_current_count }} / {{ album_max_photos }} 张，单张最大 {{ max_image_size_mb }}MB。</p>
+  <div class="panel-head">
+    <h2>语沁相册</h2>
+    <p class="subtle">已使用 {{ album_current_count }} / {{ album_max_photos }} 张</p>
+  </div>
+  <p class="subtle">单张照片最大 {{ max_image_size_mb }}MB。</p>
 
   <form class="mobile-form" method="post" action="{{ url_for('album_upload') }}" enctype="multipart/form-data" @submit="onSubmit">
     <label class="upload-btn">
       <span>📷 选择照片（可多选）</span>
-      <input type="file" name="photos" accept="image/*" multiple @change="onFilesChange" />
+      <input type="file" name="photos" accept="image/*" multiple @change="onFilesChange" :disabled="albumFull" />
     </label>
     <div class="photo-preview" v-if="previews.length">
       <img v-for="img in previews" :key="img.name" :src="img.url" :alt="img.name" />
     </div>
-    <button class="btn btn-primary" type="submit" :disabled="submitting || albumFull">[[ submitting ? '上传中...' : (albumFull ? '相册已满，请先删除' : '上传到相册') ]]</button>
+    <button class="btn btn-primary big-btn" type="submit" :disabled="submitting || albumFull">上传照片</button>
+    <p class="subtle" v-if="albumFull">相册已满，请先删除照片再上传。</p>
   </form>
 
   <div class="photo-grid album-grid">
@@ -25,14 +28,13 @@
       </button>
       <small>{{ photo.created_at }}</small>
       <form method="post" action="{{ url_for('album_delete', photo_id=photo.id) }}" onsubmit="return confirm('确认删除这张照片吗？')">
-        <button class="btn btn-soft" type="submit">删除</button>
+        <button class="btn btn-danger" type="submit">🗑 删除</button>
       </form>
     </article>
     {% else %}
       <p class="subtle">相册还是空的，上传第一张照片吧 ✨</p>
     {% endfor %}
   </div>
-
   <div class="image-viewer" v-if="previewUrl" @click.self="closePreview">
     <button type="button" class="viewer-close" @click="closePreview">×</button>
     <img :src="previewUrl" alt="预览大图" />

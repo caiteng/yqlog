@@ -1,13 +1,13 @@
 {% extends 'layout.html' %}
-{% block title %}首页看板 - 语沁成长记录{% endblock %}
+{% block title %}首页 - 语沁成长记录{% endblock %}
 {% block content %}
 <section class="hero panel">
   <div>
-    <p class="eyebrow">家庭成长看板</p>
-    <h2>语沁今天的吃喝拉撒，一屏就看懂 💕</h2>
+    <p class="eyebrow">今日概览</p>
+    <h2>今天的成长记录，一眼就知道 💕</h2>
     <div class="hero-actions">
-      <a class="btn btn-primary" href="{{ url_for('quick_entry') }}">马上快捷记录</a>
-      <a class="btn btn-soft" href="{{ url_for('album') }}">打开温馨相册</a>
+      <a class="btn btn-primary" href="{{ url_for('milk_record') }}">🍼 记录喝奶</a>
+      <a class="btn btn-primary" href="{{ url_for('poop_record') }}">💩 记录拉臭臭</a>
     </div>
   </div>
 </section>
@@ -18,38 +18,32 @@
     <strong>{{ dashboard.today.milk_count }}</strong>
   </div>
   <div class="card">
-    <p>🧴 今日喝奶总量</p>
+    <p>💩 今日拉臭臭次数</p>
+    <strong>{{ dashboard.today.today_poop_count }}</strong>
+  </div>
+  <div class="card">
+    <p>🧴 今日总奶量</p>
     <strong>{{ dashboard.today.milk_total_ml }} ML</strong>
   </div>
-  <div class="card">
-    <p>⏰ 最近一次喝奶</p>
-    <strong>{{ dashboard.today.last_milk_time or '暂无' }}</strong>
-  </div>
-  <div class="card">
-    <p>💩 最近一次拉臭臭</p>
-    <strong>{{ dashboard.today.last_poop_time or '暂无' }}</strong>
+</section>
+
+<section class="panel">
+  <h2>🍼 近 7 天喝奶趋势</h2>
+  <div class="chart-box">
+    <canvas id="milkChart"></canvas>
   </div>
 </section>
 
 <section class="panel">
-  <h2>🍼 喝奶趋势（7天/30天）</h2>
-  <canvas id="milkChart" height="120"></canvas>
-</section>
-
-<section class="cards">
-  <div class="card"><p>💩 正常</p><strong>{{ dashboard.poop_status['正常'] }}</strong></div>
-  <div class="card"><p>🧸 奶瓣</p><strong>{{ dashboard.poop_status['奶瓣'] }}</strong></div>
-  <div class="card"><p>🌶️ 酸臭</p><strong>{{ dashboard.poop_status['酸臭'] }}</strong></div>
-</section>
-
-<section class="panel">
-  <h2>💩 拉臭臭趋势（近 30 天）</h2>
-  <canvas id="poopChart" height="120"></canvas>
+  <h2>💩 近 7 天拉臭臭趋势</h2>
+  <div class="chart-box">
+    <canvas id="poopChart"></canvas>
+  </div>
 </section>
 
 <section class="panel">
   <div class="panel-head">
-    <h2>📸 首页相册</h2>
+    <h2>📸 最近照片</h2>
     <a class="btn btn-soft" href="{{ url_for('album') }}">进入相册</a>
   </div>
   <div class="photo-grid">
@@ -58,7 +52,7 @@
         <img src="{{ url_for('uploaded_file', filename=photo.image_path) }}" alt="语沁相册" loading="lazy" />
       </a>
     {% else %}
-      <p class="subtle">还没有照片，去相册页上传第一张吧。</p>
+      <p class="subtle">还没有照片，去相册上传第一张吧。</p>
     {% endfor %}
   </div>
 </section>
@@ -67,8 +61,8 @@
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-  const milkData = {{ dashboard.milk_chart | tojson }};
-  const poopData = {{ dashboard.poop_chart | tojson }};
+  const milkData = {{ dashboard.milk_chart | tojson }}.slice(-7);
+  const poopData = {{ dashboard.poop_chart | tojson }}.slice(-7);
 
   new Chart(document.getElementById('milkChart'), {
     type: 'bar',
