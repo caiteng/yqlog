@@ -1,70 +1,119 @@
 {% extends 'layout.html' %}
-{% block title %}首页 - 语沁成长记录{% endblock %}
+{% block title %}首页看板 - 语沁成长记录{% endblock %}
 {% block content %}
 <section class="hero panel">
   <div>
-    <p class="eyebrow">成长仪表盘</p>
-    <h2>把每个可爱瞬间，都变成精致回忆 ✨</h2>
-    <p class="hero-desc">轻松记录身高、体重、头围和照片，自动生成趋势图与时间线，手机上也能快速填报。</p>
+    <p class="eyebrow">家庭成长看板</p>
+    <h2>语沁今天的吃喝拉撒，一屏就看懂 💕</h2>
     <div class="hero-actions">
-      <a class="btn btn-primary" href="{{ url_for('submit') }}">立即记录今天</a>
-      <a class="btn btn-soft" href="{{ url_for('timeline') }}">查看完整轨迹</a>
+      <a class="btn btn-primary" href="{{ url_for('quick_entry') }}">马上快捷记录</a>
+      <a class="btn btn-soft" href="{{ url_for('album') }}">打开温馨相册</a>
     </div>
   </div>
 </section>
 
 <section class="cards">
-  <div class="card"><p>总记录数</p><strong>{{ stats.total_records }}</strong></div>
-  <div class="card"><p>最近记录</p><strong>{{ stats.latest_date or '暂无' }}</strong></div>
-  <div class="card"><p>平均身高(cm)</p><strong>{{ stats.avg_height or '-' }}</strong></div>
-  <div class="card"><p>平均体重(kg)</p><strong>{{ stats.avg_weight or '-' }}</strong></div>
-  <div class="card"><p>平均头围(cm)</p><strong>{{ stats.avg_head or '-' }}</strong></div>
-</section>
-
-<section class="panel">
-  <h2>成长趋势</h2>
-  <p class="subtle">温柔曲线，一眼看见语沁每天的变化。</p>
-  <canvas id="trendChart" height="120"></canvas>
-</section>
-
-<section class="panel">
-  <h2>近期轨迹</h2>
-  <div class="timeline-grid">
-    {% for row in timeline %}
-      <article class="timeline-item">
-        <h3>{{ row.record_date }}</h3>
-        <p>身高：{{ row.height_cm or '-' }} cm，体重：{{ row.weight_kg or '-' }} kg，头围：{{ row.head_circumference_cm or '-' }} cm</p>
-        <p>{{ row.note or '无备注' }}</p>
-        {% if row.photo_files %}
-          {% for file in row.photo_files.split(',') %}
-            <img src="{{ url_for('uploaded_file', filename=file) }}" alt="成长照片" loading="lazy" />
-          {% endfor %}
-        {% endif %}
-      </article>
-    {% else %}
-      <article class="timeline-item empty">
-        <h3>还没有记录</h3>
-        <p>点击「立即记录今天」，从第一条可爱成长日志开始。</p>
-      </article>
-    {% endfor %}
+  <div class="card">
+    <p>🍼 今日喝奶次数</p>
+    <strong>{{ dashboard.today.milk_count }}</strong>
+  </div>
+  <div class="card">
+    <p>🧴 今日喝奶总量</p>
+    <strong>{{ dashboard.today.milk_total_ml }} ML</strong>
+  </div>
+  <div class="card">
+    <p>⏰ 最近一次喝奶</p>
+    <strong>{{ dashboard.today.last_milk_time or '暂无' }}</strong>
+  </div>
+  <div class="card">
+    <p>💩 最近一次拉臭臭</p>
+    <strong>{{ dashboard.today.last_poop_time or '暂无' }}</strong>
   </div>
 </section>
 
+<section class="panel">
+  <h2>🍼 喝奶趋势（7天/30天）</h2>
+  <canvas id="milkChart" height="120"></canvas>
+</section>
+
+<section class="cards">
+  <div class="card"><p>💩 正常</p><strong>{{ dashboard.poop_status['正常'] }}</strong></div>
+  <div class="card"><p>🧸 奶瓣</p><strong>{{ dashboard.poop_status['奶瓣'] }}</strong></div>
+  <div class="card"><p>🌶️ 酸臭</p><strong>{{ dashboard.poop_status['酸臭'] }}</strong></div>
+</section>
+
+<section class="panel">
+  <h2>💩 拉臭臭趋势（近 30 天）</h2>
+  <canvas id="poopChart" height="120"></canvas>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>📸 首页相册</h2>
+    <a class="btn btn-soft" href="{{ url_for('album') }}">进入相册</a>
+  </div>
+  <div class="photo-grid">
+    {% for photo in dashboard.recent_photos %}
+      <a href="{{ url_for('uploaded_file', filename=photo.image_path) }}" target="_blank" rel="noreferrer">
+        <img src="{{ url_for('uploaded_file', filename=photo.image_path) }}" alt="语沁相册" loading="lazy" />
+      </a>
+    {% else %}
+      <p class="subtle">还没有照片，去相册页上传第一张吧。</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-  const chartData = {{ stats.chart | tojson }};
-  const labels = chartData.map(x => x.date);
-  const chart = new Chart(document.getElementById('trendChart'), {
-    type: 'line',
+  const milkData = {{ dashboard.milk_chart | tojson }};
+  const poopData = {{ dashboard.poop_chart | tojson }};
+
+  new Chart(document.getElementById('milkChart'), {
+    type: 'bar',
     data: {
-      labels,
+      labels: milkData.map(x => x.day),
       datasets: [
-        {label: '身高(cm)', data: chartData.map(x => x.height), borderColor: '#ff6ea9', backgroundColor: '#ff6ea966', tension: 0.3, spanGaps: true},
-        {label: '体重(kg)', data: chartData.map(x => x.weight), borderColor: '#7c8bff', backgroundColor: '#7c8bff66', tension: 0.3, spanGaps: true},
-        {label: '头围(cm)', data: chartData.map(x => x.head), borderColor: '#29b6b0', backgroundColor: '#29b6b066', tension: 0.3, spanGaps: true}
+        {
+          type: 'line',
+          label: '每日喝奶总量(ML)',
+          data: milkData.map(x => x.total_ml),
+          borderColor: '#ff6ea9',
+          backgroundColor: '#ff6ea955',
+          yAxisID: 'y',
+          tension: 0.3,
+        },
+        {
+          type: 'bar',
+          label: '每日喝奶次数',
+          data: milkData.map(x => x.times),
+          backgroundColor: '#7c8bff88',
+          yAxisID: 'y1',
+        }
       ]
     },
-    options: {responsive: true, maintainAspectRatio: false}
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: { y: { position: 'left' }, y1: { position: 'right', grid: { drawOnChartArea: false } } }
+    }
+  });
+
+  new Chart(document.getElementById('poopChart'), {
+    type: 'line',
+    data: {
+      labels: poopData.map(x => x.day),
+      datasets: [{
+        label: '每日拉臭臭次数',
+        data: poopData.map(x => x.times),
+        borderColor: '#29b6b0',
+        backgroundColor: '#29b6b066',
+        fill: true,
+        tension: 0.35,
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
   });
 </script>
 {% endblock %}

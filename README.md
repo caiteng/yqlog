@@ -1,22 +1,20 @@
 # 语沁成长记录（轻量版）
 
-一个轻量级 Web + H5 工程，用于记录女儿语沁的成长信息：
+这是一个家庭使用的轻量 Web + H5 成长记录工程：
 
-- 身高 / 体重 / 头围
-- 成长照片上传
-- 首页大屏统计（趋势图 + 核心指标）
-- 成长轨迹时间线
-- 手机端（H5）录入
-- 口令解锁（24 小时免输）
+- 快捷记录喝奶与拉臭臭
+- 首页大屏看板（今日概览 + 近 30 天趋势）
+- 温馨相册（上传 / 预览 / 删除）
+- 固定口令解锁（24 小时免重复输入）
 
 ## 技术栈
 
-- Python + Flask（轻量）
-- SQLite（单文件数据库，资源占用低）
-- Vue 3（CDN 方式，局部增强交互，无需复杂构建）
-- Chart.js（趋势图）
+- 后端：Python + Flask
+- 数据库：SQLite（单机轻量）
+- 前端：Vue 3（CDN 方式，局部 Vue 化）
+- 图表：Chart.js
 
-## 启动（本地）
+## 本地运行
 
 ```bash
 python -m venv .venv
@@ -27,43 +25,43 @@ python app.py
 
 启动后访问：
 
-- 首页：<http://127.0.0.1:8000/>
-- 录入解锁：<http://127.0.0.1:8000/unlock>
-- H5 提交：<http://127.0.0.1:8000/submit>
+- 首页看板：<http://127.0.0.1:8000/>
+- 解锁页面：<http://127.0.0.1:8000/unlock>
+- 快捷录入：<http://127.0.0.1:8000/quick>
+- 相册模块：<http://127.0.0.1:8000/album>
 
 ## 配置说明
 
-配置集中在 `config.py`：
+配置在 `config.py`：
 
-- `SECRET_KEY`：Flask Session 密钥
-- `ACCESS_PASSWORD`：录入固定口令（当前默认：`无敌可爱语沁`）
-- `SESSION_DAYS`：解锁有效天数（默认 1 天）
-- `DATABASE_PATH`：SQLite 文件路径
+- `SECRET_KEY`：Session 密钥
+- `ACCESS_PASSWORD`：录入口令（默认 `无敌可爱语沁`）
+- `SESSION_DAYS`：Session 有效天数（默认 1 天）
+- `DATABASE_PATH`：SQLite 路径
 - `UPLOAD_FOLDER`：上传目录
 
-## SQLite 说明
+## 数据表
 
-继续采用 SQLite，初始化时会自动设置：
+启动应用会自动初始化以下表：
+
+- `milk_records`：喝奶记录（`record_time`, `milk_ml`）
+- `poop_records`：拉臭臭记录（`record_time`, `poop_status`）
+- `album_photos`：相册图片（`image_path`, `created_at`）
+
+并设置 SQLite 参数：
 
 - `PRAGMA journal_mode=WAL;`
 - `PRAGMA synchronous=NORMAL;`
 - `PRAGMA foreign_keys=ON;`
 
-并创建基础索引，适合当前低频录入、单机部署场景。
+## 项目结构（核心）
 
-## 目录说明
-
-- `app.py`: 主程序（路由、数据库、上传处理、解锁拦截）
-- `config.py`: 轻量配置文件
-- `templates/`: 页面模板（含 `/unlock`、`/submit`）
-- `static/js/submit-vue.js`: 提交页 Vue 交互
-- `static/js/unlock-vue.js`: 解锁页 Vue 交互
-- `static/css/main.css`: 样式
-
-## 自动部署到服务器（已支持）
-
-项目包含 Docker + GitHub Actions 自动部署方案：
-
-- `Dockerfile` + `docker-compose.yml`：容器化运行应用
-- `.github/workflows/deploy.yml`：当 `main` 分支有新提交时，自动 SSH 到服务器执行部署
-- `scripts/deploy.sh`：服务器端拉取最新代码并重启容器
+- `app.py`：路由、数据库、看板统计、相册上传删除
+- `config.py`：轻量配置
+- `templates/index.html`：首页大屏
+- `templates/quick.html`：快捷录入入口
+- `templates/milk.html`：喝奶录入页
+- `templates/poop.html`：拉臭臭录入页
+- `templates/album.html`：相册页
+- `static/css/main.css`：整体温馨移动端样式
+- `static/js/album-vue.js`：相册页 Vue 交互

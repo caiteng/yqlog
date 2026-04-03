@@ -1,0 +1,45 @@
+{% extends 'layout.html' %}
+{% block title %}喝奶记录 - 语沁成长记录{% endblock %}
+{% block content %}
+<section class="panel record-panel" id="milkApp">
+  <div class="record-icon">🍼</div>
+  <h2>喝奶记录</h2>
+  <form method="post" class="mobile-form record-form" @submit="onSubmit">
+    <label class="time-label">当前时间</label>
+    <input class="time-input" type="datetime-local" name="record_time" required v-model="record_time" />
+
+    <label class="ml-field">
+      <input type="number" min="1" step="1" inputmode="numeric" name="milk_ml" required placeholder="输入 ml 数" v-model="milk_ml" />
+      <span>ML</span>
+    </label>
+
+    <button type="submit" class="btn btn-primary big-btn" :disabled="submitting">[[ submitting ? '提交中...' : '完成记录' ]]</button>
+  </form>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script>
+(() => {
+  const mountNode = document.getElementById('milkApp');
+  if (!mountNode || !window.Vue) return;
+  const { createApp } = window.Vue;
+  createApp({
+    delimiters: ['[[', ']]'],
+    data() {
+      return {
+        record_time: '{{ default_time }}',
+        milk_ml: '',
+        submitting: false,
+      };
+    },
+    methods: {
+      onSubmit() {
+        this.submitting = true;
+      }
+    }
+  }).mount('#milkApp');
+})();
+</script>
+{% endblock %}

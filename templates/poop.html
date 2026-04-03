@@ -1,0 +1,47 @@
+{% extends 'layout.html' %}
+{% block title %}拉臭臭记录 - 语沁成长记录{% endblock %}
+{% block content %}
+<section class="panel record-panel" id="poopApp">
+  <div class="record-icon">💩</div>
+  <h2>拉臭臭记录</h2>
+  <form method="post" class="mobile-form record-form" @submit="onSubmit">
+    <label class="time-label">当前时间</label>
+    <input class="time-input" type="datetime-local" name="record_time" required v-model="record_time" />
+
+    <div class="status-group">
+      <button type="button" class="status-item" :class="{active: poop_status==='正常'}" @click="poop_status='正常'">正常</button>
+      <button type="button" class="status-item" :class="{active: poop_status==='奶瓣'}" @click="poop_status='奶瓣'">奶瓣</button>
+      <button type="button" class="status-item" :class="{active: poop_status==='酸臭'}" @click="poop_status='酸臭'">酸臭</button>
+    </div>
+    <input type="hidden" name="poop_status" :value="poop_status" />
+
+    <button type="submit" class="btn btn-primary big-btn" :disabled="submitting || !poop_status">[[ submitting ? '提交中...' : '完成记录' ]]</button>
+  </form>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script>
+(() => {
+  const mountNode = document.getElementById('poopApp');
+  if (!mountNode || !window.Vue) return;
+  const { createApp } = window.Vue;
+  createApp({
+    delimiters: ['[[', ']]'],
+    data() {
+      return {
+        record_time: '{{ default_time }}',
+        poop_status: '正常',
+        submitting: false,
+      };
+    },
+    methods: {
+      onSubmit() {
+        this.submitting = true;
+      }
+    }
+  }).mount('#poopApp');
+})();
+</script>
+{% endblock %}

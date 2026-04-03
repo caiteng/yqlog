@@ -1,27 +1,19 @@
 {% extends 'layout.html' %}
-{% block title %}成长轨迹 - 语沁成长记录{% endblock %}
+{% block title %}记录流 - 语沁成长记录{% endblock %}
 {% block content %}
 <section class="panel">
-  <h2>成长轨迹展示</h2>
-  <p class="subtle">每条记录都按日期整理，便于家人回看成长过程。</p>
+  <h2>成长记录流</h2>
+  <p class="subtle">按时间倒序看语沁每一次喝奶和拉臭臭记录。</p>
   {% for row in records %}
     <article class="timeline-item">
-      <h3>{{ row.record_date }}</h3>
-      <p>身高：{{ row.height_cm or '-' }} cm ｜ 体重：{{ row.weight_kg or '-' }} kg ｜ 头围：{{ row.head_circumference_cm or '-' }} cm</p>
-      <p>{{ row.note or '无备注' }}</p>
-      {% if row.photo_files %}
-      <div class="photo-list">
-        {% for file in row.photo_files.split(',') %}
-        <img src="{{ url_for('uploaded_file', filename=file) }}" alt="成长照片" loading="lazy" />
-        {% endfor %}
-      </div>
-      {% endif %}
+      <h3>{{ row.type }} · {{ row.time }}</h3>
+      <p>{{ row.detail }}</p>
     </article>
   {% else %}
     <article class="timeline-item empty">
-      <h3>还没有任何记录</h3>
-      <p>快去 H5 页面添加第一条成长日志吧。</p>
-      <a class="btn btn-soft" href="{{ url_for('submit') }}">去提交</a>
+      <h3>还没有记录</h3>
+      <p>去快捷录入页，几秒就能记一条。</p>
+      <a class="btn btn-soft" href="{{ url_for('quick_entry') }}">去记录</a>
     </article>
   {% endfor %}
 </section>
