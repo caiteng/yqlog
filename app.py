@@ -26,6 +26,11 @@ app.config.from_object(Config)
 app.permanent_session_lifetime = timedelta(days=app.config["SESSION_DAYS"])
 
 
+@app.context_processor
+def inject_app_config():
+    return {"app_name": app.config["APP_NAME"]}
+
+
 POOP_STATUS_OPTIONS = {"正常", "奶瓣", "酸臭"}
 
 
@@ -140,10 +145,11 @@ def query_dashboard() -> Dict[str, Any]:
                    COUNT(*) AS times,
                    COALESCE(SUM(milk_ml), 0) AS total_ml
             FROM milk_records
-            WHERE DATE(record_time) >= DATE('now', '-29 day')
+            WHERE DATE(record_time) >= DATE('now', ?)
             GROUP BY DATE(record_time)
             ORDER BY day ASC
-            """
+            """,
+            (f"-{app.config['MILK_STATS_DAYS'] - 1} day",),
         ).fetchall()
 
         poop_last = conn.execute(
@@ -160,10 +166,11 @@ def query_dashboard() -> Dict[str, Any]:
             SELECT DATE(record_time) AS day,
                    COUNT(*) AS times
             FROM poop_records
-            WHERE DATE(record_time) >= DATE('now', '-29 day')
+            WHERE DATE(record_time) >= DATE('now', ?)
             GROUP BY DATE(record_time)
             ORDER BY day ASC
-            """
+            """,
+            (f"-{app.config['POOP_STATS_DAYS'] - 1} day",),
         ).fetchall()
 
         poop_status = conn.execute(
@@ -171,9 +178,10 @@ def query_dashboard() -> Dict[str, Any]:
             SELECT poop_status,
                    COUNT(*) AS count
             FROM poop_records
-            WHERE DATE(record_time) >= DATE('now', '-29 day')
+            WHERE DATE(record_time) >= DATE('now', ?)
             GROUP BY poop_status
-            """
+            """,
+            (f"-{app.config['POOP_STATS_DAYS'] - 1} day",),
         ).fetchall()
 
         recent_photos = conn.execute(
@@ -606,4 +614,4 @@ def uploaded_file(filename: str):
 
 if __name__ == "__main__":
     init_db()
-    app.run(host="0.0.0.0", port=8000, debug=False)
+    app.run(host=app.config["HOST"], port=app.config["PORT"], debug=False)

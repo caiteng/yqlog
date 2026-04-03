@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="theme-color" content="#ff8bb3" />
-  <title>{% block title %}语沁成长记录{% endblock %}</title>
+  <title>{% block title %}{{ app_name }}{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}" />
 </head>
 <body>
@@ -18,7 +18,7 @@
     <a class="brand" href="{{ url_for('index') }}">
       <span class="brand-logo">🌸</span>
       <div>
-        <strong>语沁成长记录</strong>
+        <strong>{{ app_name }}</strong>
         <small>轻量 · 温馨 · 手机友好</small>
       </div>
     </a>
