@@ -19,12 +19,13 @@
       <span class="brand-logo">🌸</span>
       <div>
         <strong>语沁成长记录</strong>
-        <small>可爱 · 精致 · 安心保存</small>
+        <small>轻量 · 温馨 · 好维护</small>
       </div>
     </a>
     <nav>
       <a href="{{ url_for('index') }}">首页</a>
       <a href="{{ url_for('timeline') }}">成长轨迹</a>
+      <a href="{{ url_for('unlock') }}">录入解锁</a>
       <a class="cta" href="{{ url_for('submit') }}">+ 记录今天</a>
     </nav>
   </header>
@@ -44,5 +45,6 @@
   </main>
 
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  {% block scripts %}{% endblock %}
 </body>
 </html>

@@ -1,33 +1,45 @@
-import os
 import sqlite3
-from datetime import datetime
-from pathlib import Path
+from datetime import datetime, timedelta
+from functools import wraps
 from statistics import mean
-from typing import Any, Dict, List
+from typing import Any, Callable, Dict, List
 
-from flask import Flask, flash, redirect, render_template, request, send_from_directory, url_for
+from flask import (
+    Flask,
+    flash,
+    redirect,
+    render_template,
+    request,
+    send_from_directory,
+    session,
+    url_for,
+)
 from werkzeug.utils import secure_filename
 
-BASE_DIR = Path(__file__).resolve().parent
-DB_PATH = BASE_DIR / "data" / "yqlog.db"
-UPLOAD_DIR = BASE_DIR / "uploads"
-ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "webp", "gif"}
+from config import Config
 
 app = Flask(__name__)
-app.secret_key = os.getenv("FLASK_SECRET_KEY", "yqlog-dev-secret")
-app.config["MAX_CONTENT_LENGTH"] = 10 * 1024 * 1024  # 10MB per file
+app.config.from_object(Config)
+app.permanent_session_lifetime = timedelta(days=app.config["SESSION_DAYS"])
 
 
 def get_conn() -> sqlite3.Connection:
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(app.config["DATABASE_PATH"])
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys=ON;")
     return conn
 
 
 def init_db() -> None:
-    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    db_path = app.config["DATABASE_PATH"]
+    upload_folder = app.config["UPLOAD_FOLDER"]
+
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+    upload_folder.mkdir(parents=True, exist_ok=True)
+
     with get_conn() as conn:
+        conn.execute("PRAGMA journal_mode=WAL;")
+        conn.execute("PRAGMA synchronous=NORMAL;")
         conn.executescript(
             """
             CREATE TABLE IF NOT EXISTS growth_records (
@@ -48,12 +60,30 @@ def init_db() -> None:
                 created_at TEXT NOT NULL,
                 FOREIGN KEY(record_id) REFERENCES growth_records(id) ON DELETE CASCADE
             );
+
+            CREATE INDEX IF NOT EXISTS idx_growth_records_record_date
+            ON growth_records(record_date);
+
+            CREATE INDEX IF NOT EXISTS idx_photos_record_id
+            ON photos(record_id);
             """
         )
 
 
+def require_unlock(view: Callable[..., Any]) -> Callable[..., Any]:
+    @wraps(view)
+    def wrapped(*args: Any, **kwargs: Any):
+        if not session.get("unlocked"):
+            flash("请先输入口令后再进行录入", "warning")
+            return redirect(url_for("unlock", next=request.path))
+        return view(*args, **kwargs)
+
+    return wrapped
+
+
 def allowed_file(filename: str) -> bool:
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+    allowed_extensions = app.config["ALLOWED_EXTENSIONS"]
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in allowed_extensions
 
 
 def query_stats() -> Dict[str, Any]:
@@ -134,7 +164,25 @@ def timeline():
     return render_template("timeline.html", records=records)
 
 
+@app.route("/unlock", methods=["GET", "POST"])
+def unlock():
+    next_url = request.args.get("next") or request.form.get("next") or url_for("submit")
+
+    if request.method == "POST":
+        password = request.form.get("password", "")
+        if password == app.config["ACCESS_PASSWORD"]:
+            session.permanent = True
+            session["unlocked"] = True
+            flash("口令验证成功，设备已解锁 24 小时", "success")
+            return redirect(next_url)
+
+        flash("口令不正确，请重试", "error")
+
+    return render_template("unlock.html", next_url=next_url)
+
+
 @app.route("/submit", methods=["GET", "POST"])
+@require_unlock
 def submit():
     if request.method == "POST":
         record_date = request.form.get("record_date", "").strip()
@@ -186,7 +234,7 @@ def submit():
 
                 safe_name = secure_filename(file.filename)
                 unique_name = f"{record_id}_{int(datetime.utcnow().timestamp()*1000)}_{safe_name}"
-                file.save(UPLOAD_DIR / unique_name)
+                file.save(app.config["UPLOAD_FOLDER"] / unique_name)
                 conn.execute(
                     """
                     INSERT INTO photos (record_id, file_name, original_name, created_at)
@@ -203,10 +251,9 @@ def submit():
 
 @app.route("/uploads/<path:filename>")
 def uploaded_file(filename: str):
-    return send_from_directory(UPLOAD_DIR, filename)
+    return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
 
 
 if __name__ == "__main__":
     init_db()
-    debug = os.getenv("FLASK_DEBUG", "false").lower() == "true"
-    app.run(host="0.0.0.0", port=8000, debug=debug)
+    app.run(host="0.0.0.0", port=8000, debug=False)

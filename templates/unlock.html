@@ -1,0 +1,35 @@
+{% extends 'layout.html' %}
+{% block title %}录入解锁 - 语沁成长记录{% endblock %}
+{% block content %}
+<section class="panel unlock-panel" id="unlockApp">
+  <h2>录入页面解锁</h2>
+  <p class="subtle">请输入口令，当前设备解锁后 24 小时内可直接录入成长信息。</p>
+
+  <form method="post" class="mobile-form" @submit="onSubmit">
+    <input type="hidden" name="next" value="{{ next_url }}" />
+    <label>口令
+      <input
+        :type="showPassword ? 'text' : 'password'"
+        name="password"
+        required
+        autocomplete="off"
+        placeholder="请输入录入口令"
+        v-model="password"
+      />
+    </label>
+
+    <button type="button" class="btn btn-soft" @click="togglePassword">
+      [[ showPassword ? '隐藏口令' : '显示口令' ]]
+    </button>
+
+    <button type="submit" class="btn btn-primary" :disabled="submitting">
+      [[ submitting ? '验证中...' : '验证并解锁' ]]
+    </button>
+  </form>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script src="{{ url_for('static', filename='js/unlock-vue.js') }}"></script>
+{% endblock %}
