@@ -14,24 +14,36 @@
 </section>
 
 <section class="cards cozy-cards">
-  <div class="card">
+  <div class="card stat-card">
     <p>🍼 今日喝奶次数</p>
     <strong>{{ dashboard.today.milk_count }}</strong>
   </div>
-  <div class="card">
+  <div class="card stat-card">
     <p>💩 今日拉臭臭次数</p>
     <strong>{{ dashboard.today.today_poop_count }}</strong>
   </div>
-  <div class="card">
+  <div class="card stat-card">
     <p>🧴 今日总奶量</p>
     <strong>{{ dashboard.today.milk_total_ml }} ML</strong>
   </div>
 </section>
 
 <section class="panel chart-panel">
-  <h2>🍼 近 7 天喝奶趋势</h2>
+  <h2>🍼 近 30 天喝奶趋势</h2>
+  <p class="subtle">折线显示每日奶量变化，红色点为异常波动（显著偏离均值或骤降）。</p>
   <div class="chart-box fixed-chart-height">
     <canvas id="milkChart"></canvas>
+  </div>
+</section>
+
+<section class="panel chart-panel today-panel">
+  <div class="panel-head">
+    <h2>📊 今日喝奶大屏</h2>
+    <p class="today-highlight">总量 {{ dashboard.today.milk_total_ml }} ML · {{ dashboard.today.milk_count }} 次</p>
+  </div>
+  <p class="subtle">按时间展示每次奶量，快速查看今天是否喝得稳定。</p>
+  <div class="chart-box fixed-chart-height today-chart-height">
+    <canvas id="todayMilkChart"></canvas>
   </div>
 </section>
 
@@ -74,37 +86,88 @@
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-  const milkData = {{ dashboard.milk_chart | tojson }}.slice(-7);
+  const milkData = {{ dashboard.milk_chart | tojson }}.slice(-30);
   const poopData = {{ dashboard.poop_chart | tojson }}.slice(-7);
+  const todayMilkData = {{ dashboard.today.milk_records | tojson }};
+  const chartUtils = window.YQLogCharts || {};
+  const formatDateLabel = chartUtils.formatDateLabel || ((value) => value);
+  const anomalyIndexes = (chartUtils.detectAnomalyIndexes || (() => []))(milkData.map(x => x.total_ml));
 
   new Chart(document.getElementById('milkChart'), {
-    type: 'bar',
+    type: 'line',
     data: {
-      labels: milkData.map(x => x.day),
+      labels: milkData.map(x => formatDateLabel(x.day)),
       datasets: [
         {
-          type: 'line',
-          label: '每日喝奶总量(ML)',
+          label: '每日喝奶总量 (ML)',
           data: milkData.map(x => x.total_ml),
           borderColor: '#ff6ea9',
-          backgroundColor: '#ff6ea955',
-          yAxisID: 'y',
+          backgroundColor: '#ff6ea944',
+          borderWidth: 3,
+          fill: true,
           tension: 0.3,
+          pointRadius: milkData.map((_, index) => (anomalyIndexes.includes(index) ? 5 : 2.8)),
+          pointBackgroundColor: milkData.map((_, index) => (anomalyIndexes.includes(index) ? '#ff3d67' : '#ff6ea9')),
         },
         {
-          type: 'bar',
-          label: '每日喝奶次数',
-          data: milkData.map(x => x.times),
-          backgroundColor: '#7c8bff88',
-          yAxisID: 'y1',
+          type: 'scatter',
+          label: '异常波动点',
+          data: anomalyIndexes.map((index) => ({ x: formatDateLabel(milkData[index].day), y: milkData[index].total_ml })),
+          pointRadius: 6,
+          pointHoverRadius: 7,
+          pointBackgroundColor: '#ff3d67',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
         }
       ]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      scales: { y: { position: 'left' }, y1: { position: 'right', grid: { drawOnChartArea: false } } }
+      plugins: {
+        legend: { position: 'bottom' },
+      },
+      scales: {
+        y: {
+          position: 'left',
+          title: { display: true, text: '奶量 (ML)' },
+          beginAtZero: true,
+        },
+        x: {
+          title: { display: true, text: '日期（近 30 天）' },
+        },
+      }
     }
+  });
+
+  const todayLabels = todayMilkData.map(item => item.time_label);
+  const todayValues = todayMilkData.map(item => item.milk_ml);
+  new Chart(document.getElementById('todayMilkChart'), {
+    type: 'bar',
+    data: {
+      labels: todayLabels.length ? todayLabels : ['暂无数据'],
+      datasets: [{
+        label: '本次奶量 (ML)',
+        data: todayValues.length ? todayValues : [0],
+        backgroundColor: '#7c8bffb3',
+        borderColor: '#5e72ff',
+        borderRadius: 8,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom' } },
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: { display: true, text: '奶量 (ML)' },
+        },
+        x: {
+          title: { display: true, text: '时间（今日）' },
+        },
+      },
+    },
   });
 
   new Chart(document.getElementById('poopChart'), {

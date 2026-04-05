@@ -139,6 +139,17 @@ def query_dashboard() -> Dict[str, Any]:
             (today,),
         ).fetchone()
 
+        milk_today_records = conn.execute(
+            """
+            SELECT strftime('%H:%M', record_time) AS time_label,
+                   milk_ml
+            FROM milk_records
+            WHERE DATE(record_time) = ?
+            ORDER BY record_time ASC
+            """,
+            (today,),
+        ).fetchall()
+
         milk_daily = conn.execute(
             """
             SELECT DATE(record_time) AS day,
@@ -211,6 +222,7 @@ def query_dashboard() -> Dict[str, Any]:
             "last_milk_time": milk_today["last_time"] if milk_today else None,
             "today_poop_count": poop_today["count"] if poop_today else 0,
             "last_poop_time": poop_last["record_time"] if poop_last else None,
+            "milk_records": [dict(row) for row in milk_today_records],
         },
         "milk_chart": [dict(row) for row in milk_daily],
         "poop_chart": [dict(row) for row in poop_daily],
