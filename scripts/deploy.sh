@@ -10,6 +10,16 @@ log() {
   echo "[deploy] $*"
 }
 
+
+prune_dangling_images() {
+  log "清理悬空镜像（<none>）"
+  if docker image prune -f; then
+    log "镜像清理完成"
+  else
+    log "镜像清理失败，继续部署（不影响主流程）"
+  fi
+}
+
 rollback() {
   if [ -z "${PREV_COMMIT:-}" ]; then
     log "部署失败且无可回滚版本，请人工检查"
@@ -65,7 +75,9 @@ if [ ! -f .env ]; then
 fi
 
 log "开始构建并启动容器"
+prune_dangling_images
 if "${COMPOSE_CMD[@]}"; then
+  prune_dangling_images
   log "部署成功: $(git rev-parse --short HEAD)"
   exit 0
 fi
