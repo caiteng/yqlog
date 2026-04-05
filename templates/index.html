@@ -1,10 +1,11 @@
 {% extends 'layout.html' %}
 {% block title %}首页 - 语沁成长记录{% endblock %}
 {% block content %}
-<section class="hero panel">
+<section class="hero panel cozy-hero">
   <div>
     <p class="eyebrow">今日概览</p>
     <h2>今天的成长记录，一眼就知道 💕</h2>
+    <p class="subtle">记录每一次喂奶、每一次小变化，陪伴语沁慢慢长大。</p>
     <div class="hero-actions">
       <a class="btn btn-primary" href="{{ url_for('milk_record') }}">🍼 记录喝奶</a>
       <a class="btn btn-primary" href="{{ url_for('poop_record') }}">💩 记录拉臭臭</a>
@@ -12,7 +13,7 @@
   </div>
 </section>
 
-<section class="cards">
+<section class="cards cozy-cards">
   <div class="card">
     <p>🍼 今日喝奶次数</p>
     <strong>{{ dashboard.today.milk_count }}</strong>
@@ -27,16 +28,16 @@
   </div>
 </section>
 
-<section class="panel">
+<section class="panel chart-panel">
   <h2>🍼 近 7 天喝奶趋势</h2>
-  <div class="chart-box">
+  <div class="chart-box fixed-chart-height">
     <canvas id="milkChart"></canvas>
   </div>
 </section>
 
-<section class="panel">
+<section class="panel chart-panel">
   <h2>💩 近 7 天拉臭臭趋势</h2>
-  <div class="chart-box">
+  <div class="chart-box fixed-chart-height">
     <canvas id="poopChart"></canvas>
   </div>
 </section>
@@ -61,7 +62,10 @@
     {% endfor %}
   </div>
   <div class="image-viewer" id="homeImageViewer" hidden>
-    <button type="button" class="viewer-close" id="homeImageViewerClose">×</button>
+    <div class="viewer-actions">
+      <button type="button" class="btn btn-soft" id="homeImageViewerBack">返回首页</button>
+      <button type="button" class="viewer-close" id="homeImageViewerClose">×</button>
+    </div>
     <img src="" alt="最近照片预览大图" id="homeImageViewerImage" />
   </div>
 </section>
@@ -123,13 +127,12 @@
   const imageViewer = document.getElementById('homeImageViewer');
   const imageViewerImage = document.getElementById('homeImageViewerImage');
   const imageViewerClose = document.getElementById('homeImageViewerClose');
+  const imageViewerBack = document.getElementById('homeImageViewerBack');
 
-  if (photoGrid && imageViewer && imageViewerImage && imageViewerClose) {
+  if (photoGrid && imageViewer && imageViewerImage && imageViewerClose && imageViewerBack) {
     photoGrid.addEventListener('click', (event) => {
       const button = event.target.closest('.thumb-btn[data-full-url]');
-      if (!button) {
-        return;
-      }
+      if (!button) return;
 
       imageViewerImage.src = button.dataset.fullUrl || '';
       imageViewer.hidden = false;
@@ -141,10 +144,9 @@
     };
 
     imageViewerClose.addEventListener('click', closeViewer);
+    imageViewerBack.addEventListener('click', closeViewer);
     imageViewer.addEventListener('click', (event) => {
-      if (event.target === imageViewer) {
-        closeViewer();
-      }
+      if (event.target === imageViewer) closeViewer();
     });
   }
 </script>

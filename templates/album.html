@@ -36,7 +36,10 @@
     {% endfor %}
   </div>
   <div class="image-viewer" v-if="previewUrl" @click.self="closePreview">
-    <button type="button" class="viewer-close" @click="closePreview">×</button>
+    <div class="viewer-actions">
+      <button type="button" class="btn btn-soft" @click="closePreview">返回相册</button>
+      <button type="button" class="viewer-close" @click="closePreview">×</button>
+    </div>
     <img :src="previewUrl" alt="预览大图" />
   </div>
 </section>

@@ -3,6 +3,9 @@
 {% block content %}
 <section class="panel record-panel" id="milkApp">
   <div class="record-icon">🍼</div>
+  <h2 class="record-title">喝奶记录</h2>
+  <p class="subtle">每次记录都很重要，方便回顾今天喝了多少。</p>
+
   <form method="post" class="mobile-form record-form" @submit="onSubmit">
     <label class="time-label">当前时间</label>
     <input class="time-input" type="datetime-local" name="record_time" required v-model="record_time" />
@@ -13,8 +16,10 @@
       <span>ML</span>
     </label>
 
-    <button type="submit" class="btn btn-primary big-btn" :disabled="submitting">保存记录</button>
-    <a class="btn btn-soft big-btn" href="{{ url_for('quick_entry') }}">返回</a>
+    <div class="submit-actions">
+      <button type="submit" class="btn btn-primary big-btn" :disabled="submitting">保存记录</button>
+      <a class="btn btn-soft big-btn" href="{{ url_for('quick_entry') }}">返回</a>
+    </div>
   </form>
 </section>
 {% endblock %}

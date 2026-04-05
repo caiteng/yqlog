@@ -3,6 +3,9 @@
 {% block content %}
 <section class="panel record-panel" id="poopApp">
   <div class="record-icon">💩</div>
+  <h2 class="record-title">拉臭臭记录</h2>
+  <p class="subtle">小小变化也值得记录，方便观察宝宝状态。</p>
+
   <form method="post" class="mobile-form record-form" @submit="onSubmit">
     <label class="time-label">当前时间</label>
     <input class="time-input" type="datetime-local" name="record_time" required v-model="record_time" />
@@ -20,8 +23,10 @@
 
     <input type="hidden" name="poop_status" :value="poop_status" />
 
-    <button type="submit" class="btn btn-primary big-btn" :disabled="submitting || !poop_status">保存记录</button>
-    <a class="btn btn-soft big-btn" href="{{ url_for('quick_entry') }}">返回</a>
+    <div class="submit-actions">
+      <button type="submit" class="btn btn-primary big-btn" :disabled="submitting || !poop_status">保存记录</button>
+      <a class="btn btn-soft big-btn" href="{{ url_for('quick_entry') }}">返回</a>
+    </div>
   </form>
 </section>
 {% endblock %}

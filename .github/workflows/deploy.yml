@@ -14,7 +14,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy over SSH
+      - name: Deploy to production via SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.DEPLOY_HOST }}
@@ -23,7 +23,15 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script_stop: true
           script: |
+            set -euo pipefail
             export REPO_URL='${{ github.server_url }}/${{ github.repository }}.git'
             export BRANCH='main'
             export APP_DIR='${{ secrets.DEPLOY_APP_DIR }}'
-            bash /opt/yqlog/app/scripts/deploy.sh
+
+            echo '[github-actions] Triggered by: ${{ github.event_name }}'
+            echo '[github-actions] Repository: ${{ github.repository }}'
+            echo '[github-actions] Branch: main'
+            echo "[github-actions] Deploy dir: ${APP_DIR}"
+
+            cd "${APP_DIR}"
+            bash ./scripts/deploy.sh

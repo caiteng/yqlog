@@ -6,8 +6,10 @@
     <h2>成长时间线</h2>
     <a class="btn btn-soft" href="{{ url_for('quick_entry') }}">去记录</a>
   </div>
+  <p class="subtle">按时间回顾每一条记录，陪伴成长的每个瞬间。</p>
+
   {% for row in records %}
-    <article class="timeline-item">
+    <article class="timeline-item cozy-timeline-item">
       <div class="timeline-item-head">
         <h3>{{ row.type }} · {{ row.time }}</h3>
         {% if row.record_kind == 'milk' %}
