@@ -4,14 +4,21 @@ set -euo pipefail
 APP_DIR="${APP_DIR:-/opt/yqlog/app}"
 DATA_DIR="/opt/yqlog/data"
 UPLOADS_DIR="/opt/yqlog/uploads"
+CONFIG_FILE="/opt/yqlog/config.yml"
 REPO_URL="${REPO_URL:-}"
 BRANCH="${BRANCH:-main}"
 
-require_cmd() {
-  if ! command -v "$1" >/dev/null 2>&1; then
-    echo "[init] 缺少命令: $1"
-    exit 1
+install_pkg_if_missing() {
+  local cmd="$1"
+  local pkg="$2"
+  if command -v "$cmd" >/dev/null 2>&1; then
+    echo "[init] $cmd 已安装，跳过"
+    return
   fi
+
+  echo "[init] 安装 $pkg"
+  apt-get update
+  apt-get install -y "$pkg"
 }
 
 install_docker_if_needed() {
@@ -50,9 +57,8 @@ if [ -z "$REPO_URL" ]; then
   exit 1
 fi
 
-require_cmd git
-require_cmd curl
-
+install_pkg_if_missing curl curl
+install_pkg_if_missing git git
 install_docker_if_needed
 install_compose_if_needed
 
@@ -72,6 +78,11 @@ fi
 if [ ! -f "$APP_DIR/.env" ] && [ -f "$APP_DIR/.env.example" ]; then
   cp "$APP_DIR/.env.example" "$APP_DIR/.env"
   echo "[init] 已生成 $APP_DIR/.env，请手动修改 FLASK_SECRET_KEY / ACCESS_PASSWORD"
+fi
+
+if [ ! -f "$CONFIG_FILE" ]; then
+  cp "$APP_DIR/config.default.yml" "$CONFIG_FILE"
+  echo "[init] 已生成 $CONFIG_FILE，请按需修改（例如 secret_key / access_password）"
 fi
 
 echo "[init] 首次构建并启动"

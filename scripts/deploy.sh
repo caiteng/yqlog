@@ -4,10 +4,15 @@ set -euo pipefail
 APP_DIR="${APP_DIR:-/opt/yqlog/app}"
 BRANCH="${BRANCH:-main}"
 REPO_URL="${REPO_URL:-}"
+COMPOSE_CMD=(docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env up -d --build)
+
+log() {
+  echo "[deploy] $*"
+}
 
 if [ ! -d "$APP_DIR" ]; then
-  echo "[deploy] app 目录不存在: $APP_DIR"
-  echo "[deploy] 请先执行 scripts/server-init.sh"
+  log "app 目录不存在: $APP_DIR"
+  log "请先执行 scripts/server-init.sh"
   exit 1
 fi
 
@@ -15,37 +20,50 @@ cd "$APP_DIR"
 
 if [ ! -d .git ]; then
   if [ -z "$REPO_URL" ]; then
-    echo "[deploy] 目录不是 git 仓库，且未提供 REPO_URL"
+    log "目录不是 git 仓库，且未提供 REPO_URL"
     exit 1
   fi
-  echo "[deploy] 首次拉代码到 $APP_DIR"
+  log "首次拉代码到 $APP_DIR"
   rm -rf "$APP_DIR"
   git clone "$REPO_URL" "$APP_DIR"
   cd "$APP_DIR"
 fi
 
 PREV_COMMIT="$(git rev-parse HEAD 2>/dev/null || true)"
+log "当前版本: ${PREV_COMMIT:-unknown}"
 
-echo "[deploy] 拉取最新代码: $BRANCH"
+log "拉取最新代码: origin/$BRANCH"
 git fetch --prune origin "$BRANCH"
 git checkout "$BRANCH"
 git reset --hard "origin/$BRANCH"
+NEW_COMMIT="$(git rev-parse HEAD)"
+log "目标版本: $NEW_COMMIT"
 
 if [ ! -f .env ]; then
-  echo "[deploy] 缺少 .env，尝试从 .env.example 创建"
-  cp .env.example .env
+  if [ -f .env.example ]; then
+    log "缺少 .env，尝试从 .env.example 创建"
+    cp .env.example .env
+  else
+    log "缺少 .env 且无 .env.example，无法继续部署"
+    exit 1
+  fi
 fi
 
-echo "[deploy] 开始构建并启动容器"
-if docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env up -d --build; then
-  echo "[deploy] 部署成功: $(git rev-parse --short HEAD)"
+log "开始构建并启动容器"
+if "${COMPOSE_CMD[@]}"; then
+  log "部署成功: $(git rev-parse --short HEAD)"
   exit 0
 fi
 
-if [ -n "$PREV_COMMIT" ]; then
-  echo "[deploy] 部署失败，回滚到上一版本: ${PREV_COMMIT}"
-  git reset --hard "$PREV_COMMIT"
-  docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env up -d --build
+if [ -z "$PREV_COMMIT" ]; then
+  log "部署失败且无可回滚版本，请人工检查"
+  exit 1
 fi
 
-echo "[deploy] 已完成回滚"
+log "部署失败，回滚到上一版本: $PREV_COMMIT"
+git reset --hard "$PREV_COMMIT"
+
+log "使用回滚版本重新启动容器"
+"${COMPOSE_CMD[@]}"
+
+log "已完成回滚: $(git rev-parse --short HEAD)"

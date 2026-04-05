@@ -26,4 +26,4 @@ jobs:
             export REPO_URL='${{ github.server_url }}/${{ github.repository }}.git'
             export BRANCH='main'
             export APP_DIR='${{ secrets.DEPLOY_APP_DIR }}'
-            bash "$APP_DIR/scripts/deploy.sh"
+            bash /opt/yqlog/app/scripts/deploy.sh
