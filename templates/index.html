@@ -46,14 +46,23 @@
     <h2>📸 最近照片</h2>
     <a class="btn btn-soft" href="{{ url_for('album') }}">进入相册</a>
   </div>
-  <div class="photo-grid">
+  <div class="photo-grid" id="homePhotoGrid">
     {% for photo in dashboard.recent_photos %}
-      <a href="{{ url_for('uploaded_file', filename=photo.image_path) }}" target="_blank" rel="noreferrer">
+      <button
+        type="button"
+        class="thumb-btn"
+        data-full-url="{{ url_for('uploaded_file', filename=photo.image_path) }}"
+        aria-label="查看大图"
+      >
         <img src="{{ url_for('uploaded_file', filename=photo.image_path) }}" alt="语沁相册" loading="lazy" />
-      </a>
+      </button>
     {% else %}
       <p class="subtle">还没有照片，去相册上传第一张吧。</p>
     {% endfor %}
+  </div>
+  <div class="image-viewer" id="homeImageViewer" hidden>
+    <button type="button" class="viewer-close" id="homeImageViewerClose">×</button>
+    <img src="" alt="最近照片预览大图" id="homeImageViewerImage" />
   </div>
 </section>
 {% endblock %}
@@ -109,5 +118,34 @@
     },
     options: { responsive: true, maintainAspectRatio: false }
   });
+
+  const photoGrid = document.getElementById('homePhotoGrid');
+  const imageViewer = document.getElementById('homeImageViewer');
+  const imageViewerImage = document.getElementById('homeImageViewerImage');
+  const imageViewerClose = document.getElementById('homeImageViewerClose');
+
+  if (photoGrid && imageViewer && imageViewerImage && imageViewerClose) {
+    photoGrid.addEventListener('click', (event) => {
+      const button = event.target.closest('.thumb-btn[data-full-url]');
+      if (!button) {
+        return;
+      }
+
+      imageViewerImage.src = button.dataset.fullUrl || '';
+      imageViewer.hidden = false;
+    });
+
+    const closeViewer = () => {
+      imageViewer.hidden = true;
+      imageViewerImage.src = '';
+    };
+
+    imageViewerClose.addEventListener('click', closeViewer);
+    imageViewer.addEventListener('click', (event) => {
+      if (event.target === imageViewer) {
+        closeViewer();
+      }
+    });
+  }
 </script>
 {% endblock %}
