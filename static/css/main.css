@@ -58,17 +58,33 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 14px;
-  min-height: 48px;
-  padding: 12px 18px;
+  border-radius: 999px;
+  min-height: 50px;
+  padding: 12px 20px;
   text-decoration: none;
-  border: none;
+  border: 1px solid transparent;
   cursor: pointer;
   font-weight: 700;
   font-size: 1rem;
+  letter-spacing: 0.02em;
+  transition: transform 0.16s ease, box-shadow 0.2s ease, filter 0.2s ease;
 }
-.btn-primary { background: linear-gradient(135deg, var(--brand), var(--accent)); color: #fff; box-shadow: 0 8px 20px rgba(124, 139, 255, 0.35); }
-.btn-soft { background: #fff2f8; color: var(--brand-deep); border: 1px solid #ffd6e8; }
+.btn:active { transform: translateY(1px) scale(0.985); }
+.btn-primary {
+  background: linear-gradient(135deg, #ff98c4 0%, #ff79b4 48%, #ff94cf 100%);
+  color: #fff;
+  text-shadow: 0 1px 0 rgba(178, 53, 108, 0.25);
+  border-color: #ffc2de;
+  box-shadow: 0 10px 22px rgba(255, 133, 184, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.btn-primary:hover { filter: brightness(1.03); box-shadow: 0 12px 24px rgba(255, 133, 184, 0.4); }
+.btn-soft {
+  background: linear-gradient(180deg, #fff9fc 0%, #fff1f7 100%);
+  color: var(--brand-deep);
+  border-color: #ffd6e8;
+  box-shadow: 0 6px 16px rgba(240, 181, 210, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+.btn-soft:hover { filter: brightness(0.99); box-shadow: 0 8px 18px rgba(240, 181, 210, 0.3); }
 .btn-danger { background: #ffeaea; color: #bb3535; border: 1px solid #ffcdcd; width: 100%; }
 .btn:disabled { opacity: 0.65; cursor: not-allowed; }
 
@@ -132,8 +148,15 @@ body {
 .ml-field { display: flex; align-items: center; gap: 8px; }
 .ml-field input { flex: 1; font-size: 1.2rem; }
 .ml-field span { min-width: 52px; font-weight: 700; color: var(--brand-deep); }
-.big-btn { font-size: 1.05rem; min-height: 52px; }
+.big-btn {
+  font-size: 1.07rem;
+  min-height: 58px;
+  font-weight: 800;
+  padding: 14px 24px;
+}
 .submit-actions { display: grid; gap: 10px; margin-top: 6px; }
+.submit-actions .btn-primary.big-btn { box-shadow: 0 12px 26px rgba(255, 133, 184, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.35); }
+.btn-back { color: #b04f7f; }
 
 .status-group { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 .status-group.two-col { margin-bottom: 2px; }
@@ -272,7 +295,12 @@ body {
   .desktop-nav { display: none; }
   .container { padding: 0 10px 92px; }
   .hero-actions .btn { flex: 1; }
-  .btn, .big-btn { min-height: 52px; }
+  .btn { min-height: 54px; }
+  .big-btn {
+    min-height: 60px;
+    font-size: 1.1rem;
+    padding: 15px 22px;
+  }
   .fixed-chart-height { height: 240px; min-height: 240px; max-height: 240px; }
   .viewer-actions { top: 10px; left: 10px; right: 10px; }
   .mobile-tabbar { display: flex; }

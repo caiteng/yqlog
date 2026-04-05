@@ -24,8 +24,8 @@
     <input type="hidden" name="poop_status" :value="poop_status" />
 
     <div class="submit-actions">
-      <button type="submit" class="btn btn-primary big-btn" :disabled="submitting || !poop_status">保存记录</button>
-      <a class="btn btn-soft big-btn" href="{{ url_for('quick_entry') }}">返回</a>
+      <button type="submit" class="btn btn-primary big-btn btn-save" :disabled="submitting || !poop_status">保存记录</button>
+      <a class="btn btn-soft big-btn btn-back" href="{{ url_for('quick_entry') }}">返回</a>
     </div>
   </form>
 </section>
