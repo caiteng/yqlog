@@ -22,6 +22,8 @@
 docker compose up --build
 ```
 
+> Docker 镜像构建已默认使用清华 PyPI 镜像，降低服务器与国内网络环境下 `pip install` 超时风险。
+
 访问地址：
 
 - 首页看板：<http://localhost:8000/>（或 <http://127.0.0.1:8000/>）
@@ -97,19 +99,22 @@ sudo bash /opt/yqlog/app/scripts/server-init.sh
 1. 自动触发：push 到 `main`
 2. 手动触发：GitHub Actions 页面点击 `Run workflow`
 
-部署动作：
+部署动作（由 GitHub Actions SSH 到服务器执行）：
 
 ```bash
-bash /opt/yqlog/app/scripts/deploy.sh
+cd "$DEPLOY_APP_DIR"
+bash ./scripts/deploy.sh
 ```
 
 `scripts/deploy.sh` 会执行：
 
-1. 进入 `/opt/yqlog/app`
-2. `git fetch origin/main` + `git reset --hard origin/main`
+1. 进入 `${DEPLOY_APP_DIR}`（默认 `/opt/yqlog/app`）
+2. `git fetch origin/main` + `git reset --hard origin/main` 同步最新代码
 3. `.env` 不存在则尝试由 `.env.example` 生成
-4. 运行生产 compose 启动命令
-5. 若失败，自动回滚到上一 commit 并重新启动
+4. 执行生产部署命令：
+   `docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env up -d --build`
+5. 若部署失败，自动 `git reset --hard <上一个 commit>` 回滚
+6. 使用回滚版本重新执行 compose 启动，保证服务尽快恢复
 
 ## GitHub Actions Secrets
 

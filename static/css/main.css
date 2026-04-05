@@ -51,6 +51,8 @@ body {
 .hero h2 { margin: 8px 0 12px; font-size: clamp(1.3rem, 3vw, 2rem); }
 .eyebrow { display: inline-block; padding: 6px 10px; border-radius: 999px; background: #ffe8f3; color: var(--brand-deep); font-size: 0.86rem; margin: 0; }
 .hero-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.cozy-hero { padding: 20px; }
+.cozy-cards .card strong { display: block; margin-top: 4px; }
 
 .btn {
   display: inline-flex;
@@ -91,6 +93,11 @@ body {
   max-height: 260px;
   overflow: hidden;
 }
+.fixed-chart-height {
+  height: 260px;
+  min-height: 260px;
+  max-height: 260px;
+}
 
 .mobile-form { display: grid; gap: 12px; }
 .mobile-form input, .mobile-form textarea, .mobile-form button {
@@ -119,12 +126,14 @@ body {
 
 .record-panel { max-width: 520px; margin-left: auto; margin-right: auto; }
 .record-icon { font-size: 3.2rem; margin: 0 auto 10px; text-align: center; }
+.record-title { text-align: center; margin-bottom: 4px; }
 .time-label { text-align: left; color: var(--muted); font-weight: 600; }
 .time-input { font-size: 1.1rem; font-weight: 600; }
 .ml-field { display: flex; align-items: center; gap: 8px; }
 .ml-field input { flex: 1; font-size: 1.2rem; }
 .ml-field span { min-width: 52px; font-weight: 700; color: var(--brand-deep); }
-.big-btn { font-size: 1.05rem; }
+.big-btn { font-size: 1.05rem; min-height: 52px; }
+.submit-actions { display: grid; gap: 10px; margin-top: 6px; }
 
 .status-group { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 .status-group.two-col { margin-bottom: 2px; }
@@ -139,17 +148,18 @@ body {
 }
 .status-item.active { background: #ffe9f4; border-color: #ff8fc0; color: var(--brand-deep); }
 
-.photo-preview, .photo-grid { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); }
+.photo-preview, .photo-grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); }
 .photo-preview img, .photo-grid img {
   width: 100%;
-  height: 88px;
+  height: 104px;
   object-fit: cover;
-  border-radius: 10px;
+  aspect-ratio: 1 / 1;
+  border-radius: 12px;
   border: 1px solid #f2d7e7;
 }
 
 .album-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-top: 12px; }
-.album-item { border: 1px solid var(--line); border-radius: 12px; padding: 8px; background: #fff; }
+.album-item { border: 1px solid var(--line); border-radius: 14px; padding: 8px; background: #fff; }
 .album-item small { color: var(--muted); display: block; margin: 6px 0; }
 
 .thumb-btn {
@@ -178,10 +188,18 @@ body {
   box-shadow: 0 18px 36px rgba(0, 0, 0, 0.3);
 }
 
-.viewer-close {
+.viewer-actions {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  top: 14px;
+  left: 14px;
+  right: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.viewer-close {
   width: 40px;
   height: 40px;
   border-radius: 999px;
@@ -197,13 +215,14 @@ body {
 
 .timeline-item { border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-bottom: 10px; background: #fff; }
 .timeline-item.empty { border-style: dashed; text-align: center; }
+.cozy-timeline-item { background: linear-gradient(180deg, #fff 0%, #fff7fb 100%); }
 .timeline-item-head {
   display: flex;
   justify-content: space-between;
   gap: 10px;
   align-items: flex-start;
 }
-.timeline-item-head h3 { margin: 0 0 6px; }
+.timeline-item-head h3 { margin: 0 0 6px; font-size: 1.02rem; }
 .btn-delete {
   min-height: 40px;
   padding: 8px 14px;
@@ -253,6 +272,9 @@ body {
   .desktop-nav { display: none; }
   .container { padding: 0 10px 92px; }
   .hero-actions .btn { flex: 1; }
+  .btn, .big-btn { min-height: 52px; }
+  .fixed-chart-height { height: 240px; min-height: 240px; max-height: 240px; }
+  .viewer-actions { top: 10px; left: 10px; right: 10px; }
   .mobile-tabbar { display: flex; }
   .timeline-item-head { align-items: center; }
   .btn-delete { min-width: 68px; }

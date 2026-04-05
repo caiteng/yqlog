@@ -10,6 +10,21 @@ log() {
   echo "[deploy] $*"
 }
 
+rollback() {
+  if [ -z "${PREV_COMMIT:-}" ]; then
+    log "部署失败且无可回滚版本，请人工检查"
+    exit 1
+  fi
+
+  log "部署失败，回滚到上一版本: $PREV_COMMIT"
+  git reset --hard "$PREV_COMMIT"
+
+  log "使用回滚版本重新启动容器"
+  "${COMPOSE_CMD[@]}"
+
+  log "已完成回滚: $(git rev-parse --short HEAD)"
+}
+
 if [ ! -d "$APP_DIR" ]; then
   log "app 目录不存在: $APP_DIR"
   log "请先执行 scripts/server-init.sh"
@@ -45,7 +60,7 @@ if [ ! -f .env ]; then
     cp .env.example .env
   else
     log "缺少 .env 且无 .env.example，无法继续部署"
-    exit 1
+    rollback
   fi
 fi
 
@@ -55,15 +70,4 @@ if "${COMPOSE_CMD[@]}"; then
   exit 0
 fi
 
-if [ -z "$PREV_COMMIT" ]; then
-  log "部署失败且无可回滚版本，请人工检查"
-  exit 1
-fi
-
-log "部署失败，回滚到上一版本: $PREV_COMMIT"
-git reset --hard "$PREV_COMMIT"
-
-log "使用回滚版本重新启动容器"
-"${COMPOSE_CMD[@]}"
-
-log "已完成回滚: $(git rev-parse --short HEAD)"
+rollback
