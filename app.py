@@ -223,8 +223,8 @@ def query_dashboard() -> Dict[str, Any]:
     }
 
 
-def query_timeline() -> List[Dict[str, str]]:
-    events: List[Dict[str, str]] = []
+def query_timeline() -> List[Dict[str, Any]]:
+    events: List[Dict[str, Any]] = []
 
     with get_conn() as conn:
         milk_rows = conn.execute(
@@ -248,18 +248,22 @@ def query_timeline() -> List[Dict[str, str]]:
     for row in milk_rows:
         events.append(
             {
+                "id": row["id"],
                 "time": row["record_time"],
                 "type": "喝奶",
                 "detail": f"喝奶 {row['milk_ml']} ML",
+                "record_kind": "milk",
             }
         )
 
     for row in poop_rows:
         events.append(
             {
+                "id": row["id"],
                 "time": row["record_time"],
                 "type": "拉臭臭",
                 "detail": f"状态：{row['poop_status']}",
+                "record_kind": "poop",
             }
         )
 
@@ -283,6 +287,18 @@ def create_poop_record(record_time: str, poop_status: str) -> None:
             "INSERT INTO poop_records (record_time, poop_status, created_at) VALUES (?, ?, ?)",
             (record_time, poop_status, now),
         )
+
+
+def delete_milk_record(record_id: int) -> bool:
+    with get_conn() as conn:
+        result = conn.execute("DELETE FROM milk_records WHERE id = ?", (record_id,))
+        return result.rowcount > 0
+
+
+def delete_poop_record(record_id: int) -> bool:
+    with get_conn() as conn:
+        result = conn.execute("DELETE FROM poop_records WHERE id = ?", (record_id,))
+        return result.rowcount > 0
 
 
 def list_album_photos(limit: Optional[int] = None) -> List[Dict[str, Any]]:
@@ -401,6 +417,7 @@ def index():
 
 
 @app.route("/timeline")
+@require_unlock
 def timeline():
     records = query_timeline()
     return render_template("timeline.html", records=records)
@@ -494,6 +511,28 @@ def poop_record():
     return render_template("poop.html", default_time=record_time_input_default())
 
 
+@app.route("/record/milk/<int:record_id>/delete", methods=["POST"])
+@require_unlock
+def milk_record_delete(record_id: int):
+    deleted = delete_milk_record(record_id)
+    if not deleted:
+        flash("喝奶记录不存在或已删除", "warning")
+    else:
+        flash("喝奶记录已删除", "success")
+    return redirect(url_for("timeline"))
+
+
+@app.route("/record/poop/<int:record_id>/delete", methods=["POST"])
+@require_unlock
+def poop_record_delete(record_id: int):
+    deleted = delete_poop_record(record_id)
+    if not deleted:
+        flash("拉臭臭记录不存在或已删除", "warning")
+    else:
+        flash("拉臭臭记录已删除", "success")
+    return redirect(url_for("timeline"))
+
+
 @app.route("/album")
 @require_unlock
 def album():
@@ -561,6 +600,15 @@ def api_create_milk_record():
     return api_ok({"message": "喝奶记录已保存"}, status=201)
 
 
+@app.route("/api/v1/records/milk/<int:record_id>", methods=["DELETE"])
+@require_unlock
+def api_delete_milk_record(record_id: int):
+    deleted = delete_milk_record(record_id)
+    if not deleted:
+        return api_error("喝奶记录不存在", status=404)
+    return api_ok({"message": "喝奶记录已删除"})
+
+
 @app.route("/api/v1/records/poop", methods=["POST"])
 @require_unlock
 def api_create_poop_record():
@@ -581,6 +629,15 @@ def api_create_poop_record():
 
     create_poop_record(record_time, poop_status)
     return api_ok({"message": "拉臭臭记录已保存"}, status=201)
+
+
+@app.route("/api/v1/records/poop/<int:record_id>", methods=["DELETE"])
+@require_unlock
+def api_delete_poop_record(record_id: int):
+    deleted = delete_poop_record(record_id)
+    if not deleted:
+        return api_error("拉臭臭记录不存在", status=404)
+    return api_ok({"message": "拉臭臭记录已删除"})
 
 
 @app.route("/api/v1/album/photos", methods=["GET"])

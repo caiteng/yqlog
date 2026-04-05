@@ -197,6 +197,20 @@ body {
 
 .timeline-item { border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-bottom: 10px; background: #fff; }
 .timeline-item.empty { border-style: dashed; text-align: center; }
+.timeline-item-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: flex-start;
+}
+.timeline-item-head h3 { margin: 0 0 6px; }
+.btn-delete {
+  min-height: 40px;
+  padding: 8px 14px;
+  border-color: #ffdce9;
+  color: #cc4b83;
+  font-weight: 700;
+}
 
 .flash-wrap { max-width: 1100px; margin: 10px auto; padding: 0 14px; }
 .flash { padding: 10px 12px; border-radius: 10px; margin-top: 8px; border: 1px solid transparent; }
@@ -240,4 +254,6 @@ body {
   .container { padding: 0 10px 92px; }
   .hero-actions .btn { flex: 1; }
   .mobile-tabbar { display: flex; }
+  .timeline-item-head { align-items: center; }
+  .btn-delete { min-width: 68px; }
 }
