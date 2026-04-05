@@ -141,8 +141,39 @@ body {
 .quick-card p { margin: 0; color: var(--muted); }
 
 .record-panel { max-width: 520px; margin-left: auto; margin-right: auto; }
-.record-icon { font-size: 3.2rem; margin: 0 auto 10px; text-align: center; }
-.record-title { text-align: center; margin-bottom: 4px; }
+.cozy-record-panel {
+  padding: 22px 18px 20px;
+  border: 1px solid #ffe8f3;
+  box-shadow: 0 14px 34px rgba(247, 162, 205, 0.22);
+  background: linear-gradient(180deg, #fff 0%, #fff7fc 100%);
+}
+.record-head {
+  text-align: center;
+  margin-bottom: 14px;
+}
+.record-icon {
+  font-size: 3.4rem;
+  margin: 0 auto 10px;
+  text-align: center;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 28% 22%, #fff 0%, #ffeaf4 62%, #ffe2f0 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 8px 18px rgba(239, 177, 211, 0.32);
+}
+.record-title {
+  text-align: center;
+  margin-bottom: 6px;
+  color: #a23e77;
+  letter-spacing: 0.02em;
+}
+.record-subtle {
+  margin: 0 auto;
+  max-width: 28ch;
+  line-height: 1.5;
+}
 .time-label { text-align: left; color: var(--muted); font-weight: 600; }
 .time-input { font-size: 1.1rem; font-weight: 600; }
 .ml-field { display: flex; align-items: center; gap: 8px; }
@@ -155,8 +186,44 @@ body {
   padding: 14px 24px;
 }
 .submit-actions { display: grid; gap: 10px; margin-top: 6px; }
+.record-submit-actions {
+  margin-top: 12px;
+  gap: 12px;
+}
 .submit-actions .btn-primary.big-btn { box-shadow: 0 12px 26px rgba(255, 133, 184, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.35); }
 .btn-back { color: #b04f7f; }
+.btn-round-main {
+  min-height: 72px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ff86be 0%, #f36bb8 52%, #d97dff 100%);
+  color: #fff;
+  border: 1px solid #f8c0df;
+  font-size: 1.16rem;
+  letter-spacing: 0.04em;
+  text-shadow: 0 1px 1px rgba(122, 34, 84, 0.35);
+  box-shadow: 0 16px 28px rgba(235, 108, 184, 0.4), inset 0 2px 2px rgba(255, 255, 255, 0.34);
+}
+.btn-round-main:hover {
+  filter: brightness(1.05) saturate(1.03);
+  box-shadow: 0 18px 30px rgba(226, 102, 179, 0.44), inset 0 2px 2px rgba(255, 255, 255, 0.4);
+}
+.btn-round-main:focus-visible,
+.btn-secondary-soft:focus-visible,
+.status-item:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px #fff, 0 0 0 6px rgba(255, 131, 188, 0.35);
+}
+.btn-secondary-soft {
+  min-height: 56px;
+  border-radius: 18px;
+  color: #a54b79;
+  font-weight: 700;
+  background: linear-gradient(180deg, #fffcfe 0%, #fff2f8 100%);
+}
+.btn-round-main:disabled {
+  background: linear-gradient(135deg, #f5a9ce 0%, #eda2cd 100%);
+  color: #fff;
+}
 
 .status-group { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 .status-group.two-col { margin-bottom: 2px; }
@@ -170,6 +237,17 @@ body {
   font-weight: 700;
 }
 .status-item.active { background: #ffe9f4; border-color: #ff8fc0; color: var(--brand-deep); }
+.milk-record-panel .ml-field input,
+.poop-record-panel .time-input,
+.milk-record-panel .time-input {
+  border-radius: 14px;
+  border-color: #ecd5e5;
+  background: linear-gradient(180deg, #fff 0%, #fffcfe 100%);
+}
+.poop-record-panel .status-item {
+  border-radius: 14px;
+  min-height: 50px;
+}
 
 .photo-preview, .photo-grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); }
 .photo-preview img, .photo-grid img {
@@ -304,6 +382,16 @@ body {
     min-height: 60px;
     font-size: 1.1rem;
     padding: 15px 22px;
+  }
+  .cozy-record-panel { padding: 20px 14px 18px; }
+  .record-icon {
+    width: 80px;
+    height: 80px;
+    font-size: 3.2rem;
+  }
+  .btn-round-main {
+    min-height: 74px;
+    font-size: 1.15rem;
   }
   .fixed-chart-height { height: 240px; min-height: 240px; max-height: 240px; }
   .viewer-actions { top: 10px; left: 10px; right: 10px; }
