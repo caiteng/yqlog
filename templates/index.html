@@ -130,6 +130,9 @@
   const imageViewerBack = document.getElementById('homeImageViewerBack');
 
   if (photoGrid && imageViewer && imageViewerImage && imageViewerClose && imageViewerBack) {
+    imageViewer.hidden = true;
+    imageViewerImage.src = '';
+
     photoGrid.addEventListener('click', (event) => {
       const button = event.target.closest('.thumb-btn[data-full-url]');
       if (!button) return;
@@ -146,7 +149,9 @@
     imageViewerClose.addEventListener('click', closeViewer);
     imageViewerBack.addEventListener('click', closeViewer);
     imageViewer.addEventListener('click', (event) => {
-      if (event.target === imageViewer) closeViewer();
+      if (event.target === imageViewer) {
+        closeViewer();
+      }
     });
   }
 </script>
