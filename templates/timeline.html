@@ -8,7 +8,18 @@
   </div>
   {% for row in records %}
     <article class="timeline-item">
-      <h3>{{ row.type }} · {{ row.time }}</h3>
+      <div class="timeline-item-head">
+        <h3>{{ row.type }} · {{ row.time }}</h3>
+        {% if row.record_kind == 'milk' %}
+          <form method="post" action="{{ url_for('milk_record_delete', record_id=row.id) }}" onsubmit="return confirm('确定删除这条喝奶记录吗？');">
+            <button class="btn btn-soft btn-delete" type="submit" aria-label="删除喝奶记录">删除</button>
+          </form>
+        {% elif row.record_kind == 'poop' %}
+          <form method="post" action="{{ url_for('poop_record_delete', record_id=row.id) }}" onsubmit="return confirm('确定删除这条拉臭臭记录吗？');">
+            <button class="btn btn-soft btn-delete" type="submit" aria-label="删除拉臭臭记录">删除</button>
+          </form>
+        {% endif %}
+      </div>
       <p>{{ row.detail }}</p>
     </article>
   {% else %}

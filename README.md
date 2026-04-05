@@ -3,6 +3,7 @@
 这是一个家庭使用的轻量 Web + H5 成长记录工程：
 
 - 快捷记录喝奶与拉臭臭
+- 时间线支持删除喝奶/拉臭臭记录（含确认，防误删）
 - 首页大屏看板（今日概览 + 近 30 天趋势）
 - 温馨相册（上传 / 放大预览 / 删除）
 - 固定口令解锁（24 小时免重复输入）
@@ -106,7 +107,9 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env 
 
 - `GET /api/v1/dashboard`：首页统计数据
 - `POST /api/v1/records/milk`：新增喝奶记录
+- `DELETE /api/v1/records/milk/<record_id>`：删除喝奶记录（真实删库）
 - `POST /api/v1/records/poop`：新增拉臭臭记录
+- `DELETE /api/v1/records/poop/<record_id>`：删除拉臭臭记录（真实删库）
 - `GET /api/v1/album/photos`：相册列表 + 容量元信息
 - `POST /api/v1/album/photos`：上传照片（后端校验 200 张上限）
 - `DELETE /api/v1/album/photos/<photo_id>`：删除照片（删库 + 删物理文件）
