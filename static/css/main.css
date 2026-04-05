@@ -204,6 +204,10 @@ body {
   padding: 20px;
 }
 
+.image-viewer[hidden] {
+  display: none !important;
+}
+
 .image-viewer img {
   max-width: min(92vw, 960px);
   max-height: 88vh;
