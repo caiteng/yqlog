@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from functools import wraps
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
+from zoneinfo import ZoneInfo
 
 from flask import (
     Flask,
@@ -24,6 +25,8 @@ from config import Config
 app = Flask(__name__)
 app.config.from_object(Config)
 app.permanent_session_lifetime = timedelta(days=app.config["SESSION_DAYS"])
+
+BEIJING_TZ = ZoneInfo("Asia/Shanghai")
 
 
 @app.context_processor
@@ -109,7 +112,7 @@ def normalize_record_time(raw_value: str) -> str:
 
 
 def record_time_input_default() -> str:
-    return datetime.now().strftime("%Y-%m-%dT%H:%M")
+    return datetime.now(BEIJING_TZ).strftime("%Y-%m-%dT%H:%M")
 
 
 def is_api_request() -> bool:
@@ -125,7 +128,14 @@ def api_error(message: str, status: int = 400):
 
 
 def query_dashboard() -> Dict[str, Any]:
-    today = datetime.now().strftime("%Y-%m-%d")
+    beijing_now = datetime.now(BEIJING_TZ)
+    today = beijing_now.strftime("%Y-%m-%d")
+    milk_since_day = (beijing_now - timedelta(days=app.config["MILK_STATS_DAYS"] - 1)).strftime(
+        "%Y-%m-%d"
+    )
+    poop_since_day = (beijing_now - timedelta(days=app.config["POOP_STATS_DAYS"] - 1)).strftime(
+        "%Y-%m-%d"
+    )
 
     with get_conn() as conn:
         milk_today = conn.execute(
@@ -156,11 +166,11 @@ def query_dashboard() -> Dict[str, Any]:
                    COUNT(*) AS times,
                    COALESCE(SUM(milk_ml), 0) AS total_ml
             FROM milk_records
-            WHERE DATE(record_time) >= DATE('now', ?)
+            WHERE DATE(record_time) >= ?
             GROUP BY DATE(record_time)
             ORDER BY day ASC
             """,
-            (f"-{app.config['MILK_STATS_DAYS'] - 1} day",),
+            (milk_since_day,),
         ).fetchall()
 
         poop_today = conn.execute(
@@ -186,11 +196,11 @@ def query_dashboard() -> Dict[str, Any]:
             SELECT DATE(record_time) AS day,
                    COUNT(*) AS times
             FROM poop_records
-            WHERE DATE(record_time) >= DATE('now', ?)
+            WHERE DATE(record_time) >= ?
             GROUP BY DATE(record_time)
             ORDER BY day ASC
             """,
-            (f"-{app.config['POOP_STATS_DAYS'] - 1} day",),
+            (poop_since_day,),
         ).fetchall()
 
         poop_status = conn.execute(
@@ -198,10 +208,10 @@ def query_dashboard() -> Dict[str, Any]:
             SELECT poop_status,
                    COUNT(*) AS count
             FROM poop_records
-            WHERE DATE(record_time) >= DATE('now', ?)
+            WHERE DATE(record_time) >= ?
             GROUP BY poop_status
             """,
-            (f"-{app.config['POOP_STATS_DAYS'] - 1} day",),
+            (poop_since_day,),
         ).fetchall()
 
         recent_photos = conn.execute(
